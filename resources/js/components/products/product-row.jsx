@@ -3,11 +3,8 @@ import ProductRowActions from '@/components/products/product-row-actions';
 import ProductThumbnail from '@/components/products/product-thumbnail';
 import StockStatusBadge from '@/components/products/status-badge';
 import { cn } from 'cn';
+import Currency from '../ui/currency';
 
-const currency = new Intl.NumberFormat('en-PH', {
-  style: 'currency',
-  currency: 'PHP',
-});
 
 const ProductRow = memo(({ product, className, onEdit, onDelete }) => (
   <li
@@ -43,7 +40,7 @@ const ProductRow = memo(({ product, className, onEdit, onDelete }) => (
 
     {/* Price */}
     <div className="shrink-0 text-right">
-      <p className="font-medium tabular-nums">{currency.format(product.unit_price)}</p>
+      <p className="font-medium tabular-nums"><Currency value={product.unit_price} /></p>
     </div>
 
     {/* Stops menu clicks — including portaled items — from opening the drawer. */}
