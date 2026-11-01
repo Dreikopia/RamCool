@@ -30,12 +30,14 @@ class SaleController extends Controller
         ]);
     }
 
-    public function create()
+    public function create(Request $request)
     {
         return Inertia::render('Sales/Create', [
             'products' => Product::with('inventory:id,product_id,quantity') // what it needs to get in inventory table
+                ->search($request->string('q')->value())
                 ->orderBy('name')
                 ->get(),
+            'productCount' => Product::count(),
         ]);
     }
 

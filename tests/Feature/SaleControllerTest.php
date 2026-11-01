@@ -108,6 +108,42 @@ it('renders the create page with products and their inventory', function () {
         );
 });
 
+it('filters picker products by name or sku and reports the total', function () {
+    Product::factory()->create(['name' => 'Ceiling Fan', 'sku' => 'CF-001']);
+    Product::factory()->create(['name' => 'Standing Cooler', 'sku' => 'FAN-220']);
+    Product::factory()->create(['name' => 'Split Air Conditioner', 'sku' => 'AC-100']);
+
+    $this->get(route('sales.create', ['q' => 'FAN']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Sales/Create')
+            ->has('products', 2)
+            ->where('products.0.name', 'Ceiling Fan')
+            ->where('products.1.name', 'Standing Cooler')
+            ->where('productCount', 3)
+        );
+});
+
+it('returns every picker product when the search term is blank', function () {
+    Product::factory()->count(2)->create();
+
+    $this->get(route('sales.create', ['q' => '   ']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->has('products', 2));
+});
+
+it('returns no picker products when nothing matches the search', function () {
+    Product::factory()->create(['name' => 'Ceiling Fan', 'sku' => 'CF-001']);
+
+    $this->get(route('sales.create', ['q' => 'compressor']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Sales/Create')
+            ->has('products', 0)
+            ->where('productCount', 1)
+        );
+});
+
 it('stores a sale, deducts stock and redirects to the sales index', function () {
     $product = Product::factory()->create(['unit_price' => 25.50]);
     $inventory = Inventory::factory()->for($product)->create(['quantity' => 10]);
