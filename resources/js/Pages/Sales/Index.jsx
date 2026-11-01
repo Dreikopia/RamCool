@@ -1,8 +1,11 @@
+import { useState } from 'react';
 import { format } from 'date-fns';
 import { Link } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
+import SaleInfoDrawer from '@/components/sales/sale-info-drawer';
 import SaleStatusBadge from '@/components/sales/sale-status-badge';
 import { Button } from '@/components/ui/button';
+import { formatCurrency } from '@/components/ui/currency';
 import {
     Table,
     TableBody,
@@ -12,12 +15,15 @@ import {
     TableRow,
 } from '@/components/ui/table';
 
-const peso = new Intl.NumberFormat('en-PH', {
-    style: 'currency',
-    currency: 'PHP',
-});
-
 const Index = ({ sales }) => {
+    const [selectedSale, setSelectedSale] = useState(null);
+    const [drawerOpen, setDrawerOpen] = useState(false);
+
+    const openSale = (sale) => {
+        setSelectedSale(sale);
+        setDrawerOpen(true);
+    };
+
     return (
         <div className="space-y-4">
             <div className="flex flex-wrap items-end justify-between gap-3">
@@ -45,10 +51,11 @@ const Index = ({ sales }) => {
                             <TableRow>
                                 <TableHead>Sale</TableHead>
                                 <TableHead>When</TableHead>
-                                <TableHead className="text-right">Items</TableHead>
-                                <TableHead className="text-right">Total</TableHead>
+                                <TableHead className="text-center">Items</TableHead>
+                                <TableHead className="text-left">Total</TableHead>
                                 <TableHead>Status</TableHead>
                                 <TableHead>By</TableHead>
+                                <TableHead>Action</TableHead>
                             </TableRow>
                         </TableHeader>
 
@@ -72,12 +79,12 @@ const Index = ({ sales }) => {
                                         </time>
                                     </TableCell>
 
-                                    <TableCell className="text-right tabular-nums">
+                                    <TableCell className="text-center tabular-nums">
                                         {sale.items_count}
                                     </TableCell>
 
-                                    <TableCell className="text-right font-medium tabular-nums">
-                                        {peso.format(Number(sale.total_amount))}
+                                    <TableCell className="text-left font-medium tabular-nums">
+                                        {formatCurrency(sale.total_amount)}
                                     </TableCell>
 
                                     <TableCell>
@@ -85,13 +92,29 @@ const Index = ({ sales }) => {
                                     </TableCell>
 
                                     <TableCell>{sale.user?.name ?? '—'}</TableCell>
+                                    <TableCell>
+                                        <Button
+                                            size="xs"
+                                            variant="outline"
+                                            onClick={() => openSale(sale)}
+                                        >
+                                            View
+                                        </Button>
+                                    </TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
                     </Table>
                 </div>
-            )}
-        </div>
+            )
+            }
+
+            <SaleInfoDrawer
+                open={drawerOpen}
+                onOpenChange={setDrawerOpen}
+                sale={selectedSale}
+            />
+        </div >
     );
 };
 

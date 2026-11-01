@@ -63,8 +63,33 @@ it('lists sales newest first with their item count and cashier', function () {
             ->where('sales.data.0.sales_number', 'S-0002')
             ->where('sales.data.0.items_count', 1)
             ->where('sales.data.0.user.name', $this->user->name)
+            ->has('sales.data.0.items', 1)
+            ->where('sales.data.0.items.0.product.name', $product->name)
+            ->where('sales.data.0.items.0.quantity', 3)
+            ->where('sales.data.0.items.0.unit_price', fn ($value) => (float) $value === 100.0)
+            ->where('sales.data.0.items.0.subtotal', fn ($value) => (float) $value === 300.0)
             ->where('sales.data.1.sales_number', 'S-0001')
             ->where('sales.data.1.items_count', 0)
+        );
+});
+
+it('keeps sale item product details when the product was soft deleted', function () {
+    $product = Product::factory()->create(['name' => 'Retired fan motor']);
+    Inventory::factory()->for($product)->create(['quantity' => 10]);
+
+    $sale = app(SaleService::class)->createSale([
+        ['product_id' => $product->id, 'quantity' => 2],
+    ], $this->user->id);
+
+    $product->delete();
+
+    $this->get(route('sales'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Sales/Index')
+            ->where('sales.data.0.sales_number', $sale->sales_number)
+            ->where('sales.data.0.items.0.product.name', 'Retired fan motor')
+            ->where('sales.data.0.items.0.quantity', 2)
         );
 });
 

@@ -17,7 +17,12 @@ class SaleController extends Controller
     {
         return Inertia::render('Sales/Index', [
             'sales' => Sale::query()
-                ->with('user:id,name')
+                ->with([
+                    'user:id,name',
+                    'items' => fn ($query) => $query->with([
+                        'product' => fn ($productQuery) => $productQuery->withTrashed(),
+                    ]),
+                ])
                 ->withCount('items')
                 ->latest()
                 ->orderByDesc('id')
