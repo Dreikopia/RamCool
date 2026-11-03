@@ -34,4 +34,16 @@ class InventoryMovement extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    /**
+     * Derive a human-friendly direction from the movement type.
+     */
+    public function getDirectionAttribute(): string
+    {
+        return match ($this->type) {
+            MovementType::STOCK_OUT => 'outbound',
+            MovementType::STOCK_IN => 'inbound',
+            MovementType::ADJUSTMENT => $this->quantity < 0 ? 'outbound' : 'inbound',
+        };
+    }
 }

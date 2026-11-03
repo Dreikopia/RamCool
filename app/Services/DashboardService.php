@@ -3,22 +3,23 @@
 namespace App\Services;
 
 use App\Enums\SaleStatus;
-use App\Enums\StockStatus;
 use App\Models\InventoryMovement;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use Carbon\CarbonInterface;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Carbon;
 
 class DashboardService
 {
     private const RECENT_PRODUCT_DAYS = 30;
 
     private const TREND_MONTHS = 6;
+
+    private const TREND_WEEKS = 8;
+
+    private const CATEGORY_LIMIT = 10;
 
     private const MOVEMENTS_PER_PAGE = 10;
 
@@ -99,6 +100,55 @@ class DashboardService
         );
     }
 
+    public function weeklySalesTrend(): array
+    {
+        $start = now()
+            ->startOfWeek(CarbonInterface::MONDAY)
+            ->subWeeks(self::TREND_WEEKS - 1);
+
+        $sales = Sale::query()
+            ->where('status', SaleStatus::COMPLETED)
+            ->where('created_at', '>=', $start)
+            ->get(['created_at', 'total_amount']);
+
+        $buckets = [];
+
+        for ($offset = 0; $offset < self::TREND_WEEKS; $offset++) {
+            $week = $start->copy()->addWeeks($offset);
+
+            $buckets[$week->format('Y-m-d')] = [
+                'period' => $week->format('Y-m-d'),
+                'label' => $week->format('M j'),
+                'revenue' => 0.0,
+                'orders' => 0,
+            ];
+        }
+
+        foreach ($sales as $sale) {
+            $key = $sale->created_at
+                ->copy()
+                ->startOfWeek(CarbonInterface::MONDAY)
+                ->format('Y-m-d');
+
+            if (! isset($buckets[$key])) {
+                continue;
+            }
+
+            $buckets[$key]['revenue'] += (float) $sale->total_amount;
+            $buckets[$key]['orders']++;
+        }
+
+        return array_map(
+            fn (array $bucket): array => [
+                'period' => $bucket['period'],
+                'label' => $bucket['label'],
+                'revenue' => round($bucket['revenue'], 2),
+                'orders' => $bucket['orders'],
+            ],
+            array_values($buckets),
+        );
+    }
+
     public function salesByCategory(): array
     {
         $rows = SaleItem::query()
@@ -109,23 +159,26 @@ class DashboardService
             ->groupBy('categories.id', 'categories.name')
             ->select(['categories.id as category_id', 'categories.name as name'])
             ->selectRaw('SUM(sale_items.subtotal) as revenue')
-            ->orderByDesc('revenue')
+            ->selectRaw('SUM(sale_items.quantity) as sales_count')
+            ->orderByDesc('sales_count')
+            ->limit(self::CATEGORY_LIMIT)
             ->get();
 
-        $total = (float) $rows->sum('revenue');
+        $total = (int) $rows->sum('sales_count');
 
         return $rows->map(fn (SaleItem $row): array => [
             'category_id' => (int) $row->category_id,
             'name' => (string) $row->name,
             'revenue' => round((float) $row->revenue, 2),
-            'percentage' => $total > 0 ? round(((float) $row->revenue / $total) * 100, 1) : 0.0,
+            'sales_count' => (int) $row->sales_count,
+            'percentage' => $total > 0 ? round(((int) $row->sales_count / $total) * 100, 1) : 0.0,
         ])->all();
     }
 
     public function restockItems(): Collection
     {
         return Product::query()
-            ->with(['inventory', 'category:id,name', 'supplier:id,name'])
+            ->with(['inventory.movements.user:id,name', 'category:id,name', 'supplier:id,name'])
             ->where(function (Builder $query): void {
                 $query->whereDoesntHave('inventory')
                     ->orWhereHas('inventory', function (Builder $inventory): void {
@@ -140,39 +193,14 @@ class DashboardService
             ->values();
     }
 
-    public function movements(array $filters = []): LengthAwarePaginator
+    public function movements(int $limit = self::MOVEMENTS_PER_PAGE): Collection
     {
         return InventoryMovement::query()
             ->with(['inventory.product', 'inventory.product.inventory', 'user:id,name'])
-            ->when($filters['type'] ?? null, fn (Builder $query, string $type) => $query->where('type', $type))
-            ->when($filters['q'] ?? null, fn (Builder $query, string $term) => $query->whereHas(
-                'inventory.product',
-                fn (Builder $product) => $product->search($term),
-            ))
-            ->when($filters['status'] ?? null, fn (Builder $query, string $status) => $this->applyStatusFilter($query, $status))
-            ->when($filters['from'] ?? null, fn (Builder $query, string $from) => $query->where('created_at', '>=', Carbon::parse($from)->startOfDay()))
-            ->when($filters['to'] ?? null, fn (Builder $query, string $to) => $query->where('created_at', '<=', Carbon::parse($to)->endOfDay()))
             ->latest()
             ->orderByDesc('id')
-            ->paginate(self::MOVEMENTS_PER_PAGE)
-            ->withQueryString();
-    }
-
-    private function applyStatusFilter(Builder $query, string $status): void
-    {
-        $stockStatus = StockStatus::from($status);
-
-        $query->whereHas('inventory', function (Builder $inventory) use ($stockStatus): void {
-            $inventory->whereHas('product', function (Builder $product) use ($stockStatus): void {
-                match ($stockStatus) {
-                    StockStatus::OUT_OF_STOCK => $product->where('inventories.quantity', 0),
-                    StockStatus::LOW_STOCK => $product
-                        ->where('inventories.quantity', '>', 0)
-                        ->whereColumn('inventories.quantity', '<=', 'products.reorder_level'),
-                    StockStatus::IN_STOCK => $product->whereColumn('inventories.quantity', '>', 'products.reorder_level'),
-                };
-            });
-        });
+            ->take($limit)
+            ->get();
     }
 
     private function completedRevenueBetween(CarbonInterface $start, CarbonInterface $end): float
