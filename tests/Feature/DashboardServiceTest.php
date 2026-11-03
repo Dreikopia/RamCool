@@ -124,7 +124,26 @@ it('returns six monthly revenue buckets and ignores voided sales', function () {
         ->and($trend[5]['orders'])->toBe(1);
 });
 
-it('splits completed sales revenue by category', function () {
+it('returns eight weekly revenue buckets using Monday week starts', function () {
+    $this->travelTo('2026-11-15 12:00:00');
+
+    backdateSale(makeSale(40.00), '2026-11-10 10:00:00');
+    backdateSale(makeSale(25.00), '2026-11-02 10:00:00');
+    makeSale(999.00, SaleStatus::VOIDED);
+
+    $trend = $this->service->weeklySalesTrend();
+
+    expect($trend)->toHaveCount(8)
+        ->and($trend[0]['period'])->toBe('2026-09-21')
+        ->and($trend[0]['revenue'])->toBe(0.0)
+        ->and($trend[6]['period'])->toBe('2026-11-02')
+        ->and($trend[6]['revenue'])->toBe(25.0)
+        ->and($trend[7]['period'])->toBe('2026-11-09')
+        ->and($trend[7]['revenue'])->toBe(40.0)
+        ->and($trend[7]['orders'])->toBe(1);
+});
+
+it('splits completed sales by category using units sold', function () {
     $electronics = Category::factory()->create(['name' => 'Electronics']);
     $apparel = Category::factory()->create(['name' => 'Apparel']);
 
@@ -143,10 +162,32 @@ it('splits completed sales revenue by category', function () {
     expect($rows)->toHaveCount(2)
         ->and($rows[0]['name'])->toBe('Electronics')
         ->and($rows[0]['revenue'])->toBe(60.0)
-        ->and($rows[0]['percentage'])->toBe(75.0)
+        ->and($rows[0]['sales_count'])->toBe(2)
+        ->and($rows[0]['percentage'])->toBe(66.7)
         ->and($rows[1]['name'])->toBe('Apparel')
         ->and($rows[1]['revenue'])->toBe(20.0)
-        ->and($rows[1]['percentage'])->toBe(25.0);
+        ->and($rows[1]['sales_count'])->toBe(1)
+        ->and($rows[1]['percentage'])->toBe(33.3);
+});
+
+it('limits sales by category to the ten highest sales categories', function () {
+    foreach (range(1, 11) as $i) {
+        $category = Category::factory()->create(['name' => "Category {$i}"]);
+        $product = Product::factory()->create(['category_id' => $category->id]);
+        $sale = makeSale(100.00);
+        $sale->items()->create([
+            'product_id' => $product->id,
+            'quantity' => $i,
+            'unit_price' => 10.00,
+            'subtotal' => 10.00 * $i,
+        ]);
+    }
+
+    $rows = $this->service->salesByCategory();
+
+    expect($rows)->toHaveCount(10)
+        ->and($rows[0]['name'])->toBe('Category 11')
+        ->and(collect($rows)->pluck('name')->all())->not->toContain('Category 1');
 });
 
 it('returns low and out of stock items for restocking, most urgent first', function () {
@@ -163,6 +204,23 @@ it('returns low and out of stock items for restocking, most urgent first', funct
 
     expect($items->pluck('id')->all())->toBe([$out->id, $low->id])
         ->and($items->first()->stock_status['value'])->toBe('out_of_stock');
+});
+
+it('includes the inventory and recent movements for the restock drawer', function () {
+    $product = Product::factory()->create(['reorder_level' => 10]);
+    $inventory = Inventory::factory()->for($product)->create(['quantity' => 2]);
+
+    $inventory->movements()->create([
+        'user_id' => $this->user->id,
+        'type' => MovementType::STOCK_IN,
+        'quantity' => 5,
+    ]);
+
+    $item = $this->service->restockItems()->first();
+
+    expect($item->inventory->id)->toBe($inventory->id)
+        ->and($item->inventory->movements)->toHaveCount(1)
+        ->and($item->inventory->movements->first()->user->id)->toBe($this->user->id);
 });
 
 it('returns movements newest first with product, direction and stock status', function () {
@@ -183,7 +241,7 @@ it('returns movements newest first with product, direction and stock status', fu
 
     $movements = $this->service->movements();
 
-    expect($movements->total())->toBe(2)
+    expect($movements)->toHaveCount(2)
         ->and($movements->first()->id)->toBe($outbound->id)
         ->and($movements->first()->direction)->toBe('outbound')
         ->and($movements->first()->inventory->product->name)->toBe('HEPA Filter')
@@ -192,49 +250,7 @@ it('returns movements newest first with product, direction and stock status', fu
         ->and($movements->last()->direction)->toBe('inbound');
 });
 
-it('filters movements by product, type, status and date range', function () {
-    $low = Product::factory()->create(['name' => 'HEPA Filter', 'reorder_level' => 10]);
-    $lowInventory = Inventory::factory()->for($low)->create(['quantity' => 4]);
-
-    $out = Product::factory()->create(['name' => 'Carbon Pad', 'reorder_level' => 10]);
-    $outInventory = Inventory::factory()->for($out)->create(['quantity' => 0]);
-
-    $healthy = Product::factory()->create(['name' => 'Dust Mask', 'reorder_level' => 5]);
-    $healthyInventory = Inventory::factory()->for($healthy)->create(['quantity' => 50]);
-
-    $old = $lowInventory->movements()->create([
-        'user_id' => $this->user->id,
-        'type' => MovementType::STOCK_IN,
-        'quantity' => 20,
-    ]);
-    $old->created_at = now()->subDays(10);
-    $old->save();
-
-    $recentOut = $outInventory->movements()->create([
-        'user_id' => $this->user->id,
-        'type' => MovementType::STOCK_OUT,
-        'quantity' => -5,
-    ]);
-
-    $recentAdjustment = $healthyInventory->movements()->create([
-        'user_id' => $this->user->id,
-        'type' => MovementType::ADJUSTMENT,
-        'quantity' => 3,
-    ]);
-
-    expect($this->service->movements(['q' => 'HEPA'])->total())->toBe(1)
-        ->and($this->service->movements(['q' => 'HEPA'])->first()->id)->toBe($old->id)
-        ->and($this->service->movements(['type' => 'stock_out'])->total())->toBe(1)
-        ->and($this->service->movements(['type' => 'stock_out'])->first()->id)->toBe($recentOut->id)
-        ->and($this->service->movements(['status' => 'out_of_stock'])->total())->toBe(1)
-        ->and($this->service->movements(['status' => 'out_of_stock'])->first()->id)->toBe($recentOut->id)
-        ->and($this->service->movements([
-            'from' => now()->subDays(2)->toDateString(),
-            'to' => now()->toDateString(),
-        ])->pluck('id')->all())->toEqualCanonicalizing([$recentOut->id, $recentAdjustment->id]);
-});
-
-it('returns at most ten movements per page', function () {
+it('returns only the ten latest movements', function () {
     $inventory = Inventory::factory()->create();
 
     foreach (range(1, 11) as $i) {
@@ -247,8 +263,9 @@ it('returns at most ten movements per page', function () {
 
     $movements = $this->service->movements();
 
-    expect($movements->total())->toBe(11)
-        ->and($movements)->toHaveCount(10);
+    expect($movements)->toHaveCount(10)
+        ->and($movements->first()->quantity)->toBe(11)
+        ->and($movements->last()->quantity)->toBe(2);
 });
 
 it('renders the dashboard with kpis, charts, restock items and movements', function () {
@@ -260,15 +277,8 @@ it('renders the dashboard with kpis, charts, restock items and movements', funct
             ->component('Dashboard/Index')
             ->has('kpis', 8)
             ->has('salesTrend', 6)
+            ->has('weeklySalesTrend', 8)
             ->has('salesByCategory')
             ->has('restockItems')
-            ->has('movements.data')
-            ->has('filters', 5));
-});
-
-it('rejects movement filters that are not valid enum values', function () {
-    $this->actingAs($this->user);
-
-    $this->get(route('dashboard', ['type' => 'invalid', 'status' => 'unknown']))
-        ->assertInvalid(['type', 'status']);
+            ->has('movements', 0));
 });
