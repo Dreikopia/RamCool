@@ -18,29 +18,16 @@ const Index = ({ categories }) => {
     return (
 
         <div className='p-6 space-y-4'>
-            <div className='flex justify-between items-center'>
-                <div>
-                    <h1 className="text-2xl font-bold">
-                        Categories
-                    </h1>
-                    <p className="text-sm text-muted-foreground">
-                        Manage your product categories.
-                    </p>
+            <div>
+                <Button onClick={openCreate} variant="secondary">
+                    New category
+                </Button>
 
-                </div>
-
-                <div>
-                    <Button onClick={openCreate} variant="secondary">
-                        New category
-                    </Button>
-
-                    <CategoryFormModal
-                        open={modal.open}
-                        onOpenChange={(open) => setModal((current) => ({ ...current, open }))}
-                        category={modal.category}
-                    />
-
-                </div>
+                <CategoryFormModal
+                    open={modal.open}
+                    onOpenChange={(open) => setModal((current) => ({ ...current, open }))}
+                    category={modal.category}
+                />
             </div>
 
             <div className='rounded-md border bg-muted'>
@@ -99,6 +86,6 @@ const Index = ({ categories }) => {
     );
 }
 
-Index.layout = (page) => <AppLayout>{page}</AppLayout>;
+Index.layout = (page) => <AppLayout title="Categories">{page}</AppLayout>;
 
 export default Index;

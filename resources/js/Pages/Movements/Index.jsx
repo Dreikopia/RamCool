@@ -32,38 +32,29 @@ const Index = ({ movements }) => {
 
     return (
         <div className="space-y-4 p-6">
-            <div className="flex flex-wrap items-end justify-between gap-3">
-                <div>
-                    <h1 className="text-2xl font-semibold tracking-tight">Movements</h1>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                        {movements.length} {movements.length === 1 ? "movement" : "movements"} recorded · newest first
-                    </p>
+            <div className="flex flex-wrap items-center gap-3">
+                <div className="relative">
+                    <Search className="absolute top-2.5 left-2.5 size-4 text-muted-foreground" />
+                    <Input placeholder="Search product or SKU" className="pl-8" />
                 </div>
 
-                <div className="flex items-center gap-2">
-                    <div className="relative">
-                        <Search className="absolute top-2.5 left-2.5 size-4 text-muted-foreground" />
-                        <Input placeholder="Search product or SKU" className="pl-8" />
-                    </div>
-
-                    <div
-                        className="flex items-center gap-1 rounded-lg border p-1"
-                        role="group"
-                        aria-label="Filter movements by type"
-                    >
-                        {TYPE_OPTIONS.map((option) => (
-                            <Button
-                                key={option.value}
-                                type="button"
-                                variant={type === option.value ? "default" : "outline"}
-                                size="sm"
-                                aria-pressed={type === option.value}
-                                onClick={() => setType(option.value)}
-                            >
-                                {option.label}
-                            </Button>
-                        ))}
-                    </div>
+                <div
+                    className="flex items-center gap-1 rounded-lg border p-1"
+                    role="group"
+                    aria-label="Filter movements by type"
+                >
+                    {TYPE_OPTIONS.map((option) => (
+                        <Button
+                            key={option.value}
+                            type="button"
+                            variant={type === option.value ? "default" : "outline"}
+                            size="sm"
+                            aria-pressed={type === option.value}
+                            onClick={() => setType(option.value)}
+                        >
+                            {option.label}
+                        </Button>
+                    ))}
                 </div>
             </div>
 
@@ -133,6 +124,6 @@ const Index = ({ movements }) => {
     );
 };
 
-Index.layout = (page) => <AppLayout>{page}</AppLayout>;
+Index.layout = (page) => <AppLayout title="Movements">{page}</AppLayout>;
 
 export default Index;

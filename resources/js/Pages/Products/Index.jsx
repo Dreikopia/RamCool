@@ -12,16 +12,7 @@ const Index = ({ products, categories, suppliers }) => {
 
   return (
     <>
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Products</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {products.length === 0
-              ? 'Nothing here yet.'
-              : `${products.length} in the catalog.`}
-          </p>
-        </div>
-
+      <div className="flex flex-wrap items-center gap-3">
         <Button onClick={openCreate} variant="secondary">
           New product
         </Button>
@@ -55,6 +46,6 @@ const Index = ({ products, categories, suppliers }) => {
   );
 };
 
-Index.layout = (page) => <AppLayout>{page}</AppLayout>;
+Index.layout = (page) => <AppLayout title="Products">{page}</AppLayout>;
 
 export default Index;

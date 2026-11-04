@@ -26,14 +26,7 @@ const Index = ({ sales }) => {
 
     return (
         <div className="space-y-4">
-            <div className="flex flex-wrap items-end justify-between gap-3">
-                <div>
-                    <h1 className="text-2xl font-semibold tracking-tight">Sales</h1>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                        Everything sold, newest first
-                    </p>
-                </div>
-
+            <div className="flex flex-wrap items-center gap-3">
                 <Button render={<Link href="/sales/create" />}>New sale</Button>
             </div>
 
@@ -118,6 +111,6 @@ const Index = ({ sales }) => {
     );
 };
 
-Index.layout = (page) => <AppLayout>{page}</AppLayout>;
+Index.layout = (page) => <AppLayout title="Sales">{page}</AppLayout>;
 
 export default Index;

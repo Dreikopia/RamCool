@@ -111,6 +111,6 @@ const Create = ({ products, productCount }) => {
     );
 };
 
-Create.layout = (page) => <AppLayout>{page}</AppLayout>;
+Create.layout = (page) => <AppLayout title="New sale">{page}</AppLayout>;
 
 export default Create;

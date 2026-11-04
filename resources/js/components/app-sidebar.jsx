@@ -69,7 +69,6 @@ const AppSidebar = ({ ...props }) => {
                             <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
                                 <Wind className="size-4" />
                             </div>
-                            <span className="truncate font-semibold">AirCare</span>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>

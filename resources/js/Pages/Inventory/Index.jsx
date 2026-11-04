@@ -24,13 +24,6 @@ const Index = ({ inventories }) => {
 
     return (
         <div className="space-y-4 px-6">
-            <div>
-                <h1 className="text-xl font-bold">Inventory</h1>
-                <p className="text-sm text-muted-foreground">
-                    What's on hand and what needs reordering
-                </p>
-            </div>
-
             <div className="rounded-md border bg-muted">
                 <Table>
                     <TableHeader>
@@ -101,5 +94,5 @@ const Index = ({ inventories }) => {
     );
 };
 
-Index.layout = (page) => <AppLayout>{page}</AppLayout>;
+Index.layout = (page) => <AppLayout title="Inventory">{page}</AppLayout>;
 export default Index;

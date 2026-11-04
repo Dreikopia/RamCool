@@ -415,6 +415,6 @@ const Index = ({
     );
 };
 
-Index.layout = (page) => <AppLayout>{page}</AppLayout>;
+Index.layout = (page) => <AppLayout title="Dashboard">{page}</AppLayout>;
 
 export default Index;

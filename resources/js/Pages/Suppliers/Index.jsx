@@ -22,11 +22,7 @@ const Index = ({ suppliers }) => {
 
     return (
         <div className="p-6 space-y-4">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold"> Suppliers </h1>
-                    <p className="text-sm text-muted-foreground"> Manage Suppliers </p>
-                </div>
+            <div>
                 <Button onClick={openCreate}>Add Supplier</Button>
             </div>
 
@@ -95,6 +91,6 @@ const Index = ({ suppliers }) => {
     );
 }
 
-Index.layout = (page) => <AppLayout>{page}</AppLayout>;
+Index.layout = (page) => <AppLayout title="Suppliers">{page}</AppLayout>;
 
 export default Index;

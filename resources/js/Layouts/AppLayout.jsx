@@ -5,7 +5,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { useTheme } from '@/hooks/use-theme';
 import AppSidebar from '@/components/app-sidebar';
 
-const AppLayout = ({ children }) => {
+const AppLayout = ({ children, title }) => {
     const { resolvedTheme, toggleTheme } = useTheme();
 
     return (
@@ -15,7 +15,9 @@ const AppLayout = ({ children }) => {
                 <SidebarInset>
                     <header className="flex h-16 shrink-0 items-center gap-2 border-b border-sidebar-border px-4">
                         <SidebarTrigger className="-ml-1" />
-                        <span className="text-sm font-medium text-muted-foreground">AirCare</span>
+                        <h1 className="min-w-0 truncate text-base font-semibold tracking-tight">
+                            {title}
+                        </h1>
 
                         <Button
                             variant="ghost"
