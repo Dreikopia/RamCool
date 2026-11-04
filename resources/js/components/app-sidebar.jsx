@@ -14,6 +14,17 @@ import {
     SidebarMenuItem,
     SidebarRail,
 } from '@/components/ui/sidebar';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger
+} from './ui/alert-dialog';
 
 const navGroups = [
     {
@@ -100,13 +111,37 @@ const AppSidebar = ({ ...props }) => {
 
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton
-                            tooltip="Logout"
-                            onClick={() => router.post('/logout', {}, { preserveScroll: true })}
-                        >
-                            <LogOutIcon />
-                            <span>Logout</span>
-                        </SidebarMenuButton>
+
+                        <AlertDialog>
+
+                            <AlertDialogTrigger
+                                render={
+                                    <SidebarMenuButton tooltip="Logout" />
+                                }
+                            >
+                                <LogOutIcon />
+                                <span>Logout</span>
+                            </AlertDialogTrigger>
+
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Log out?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        You will need to sign in again to continue
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                        onClick={() => router.post('/logout', {}, { preserveScroll: true })}
+                                        className="bg-red-600 text-white hover:bg-red-700 hover:text-white transition-colors"
+                                    >
+                                        Log out
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+
                     </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarFooter>
