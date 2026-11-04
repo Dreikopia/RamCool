@@ -37,7 +37,10 @@ class HandleInertiaRequests extends Middleware
     {
         return [
             ...parent::share($request),
-            //
+
+            'flash' => [
+                'retry_after' => fn () => $request->session()->get('retry_after'),
+            ],
         ];
     }
 }

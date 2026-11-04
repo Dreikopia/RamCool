@@ -44,8 +44,28 @@ it('redirects guests away from the dashboard', function () {
 
 it('logs a user out', function () {
     $this->actingAs(User::factory()->create())
-        ->delete(route('logout'))
+        ->post(route('logout'))
         ->assertRedirect(route('login'));
 
     $this->assertGuest();
+});
+
+it('throttles login after five failed attempts', function () {
+    User::factory()->create(['email' => 'staff@example.com']);
+
+    foreach (range(1, 5) as $attempt) {
+        $this->post(route('login.store'), [
+            'email' => 'staff@example.com',
+            'password' => 'wrong-password',
+        ])->assertSessionHasErrors('email');
+    }
+
+    $this->post(route('login.store'), [
+        'email' => 'staff@example.com',
+        'password' => 'wrong-password',
+    ])
+        ->assertRedirect(route('login'))
+        ->assertSessionHasErrors('email');
+
+    expect(session('retry_after'))->toBeGreaterThan(0);
 });

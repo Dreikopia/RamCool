@@ -102,7 +102,7 @@ const AppSidebar = ({ ...props }) => {
                     <SidebarMenuItem>
                         <SidebarMenuButton
                             tooltip="Logout"
-                            onClick={() => router.delete('/logout', { preserveScroll: true })}
+                            onClick={() => router.post('/logout', {}, { preserveScroll: true })}
                         >
                             <LogOutIcon />
                             <span>Logout</span>

@@ -1,22 +1,58 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useForm } from "@inertiajs/react";
+import { useForm, usePage } from "@inertiajs/react";
 import { Eye, EyeOff } from "lucide-react";
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Checkbox } from "@/components/ui/checkbox";
+
 const Login = () => {
 
     const [showPassword, setShowPassword] = useState(false);
+    const [cooldown, setCooldown] = useState(0);
 
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const { flash } = usePage().props;
+
+    const { data, setData, post, processing, errors, reset, clearErrors } = useForm({
         'email': '',
         'password': '',
         'remember': false,
     });
 
+    useEffect(() => {
+        const retryAfter = Number(flash?.retry_after ?? 0);
+
+        if (retryAfter > 0) {
+            setCooldown(retryAfter);
+        }
+    }, [flash?.retry_after]);
+
+    useEffect(() => {
+        if (cooldown <= 0) {
+            return;
+        }
+
+        const timer = setTimeout(() => {
+            setCooldown(current => Math.max(0, current - 1));
+        }, 1000);
+
+        return () => clearTimeout(timer);
+    }, [cooldown]);
+
+    useEffect(() => {
+        if (cooldown === 0 && errors.email?.includes('Too many login attempts')) {
+            clearErrors('email');
+        }
+    }, [cooldown, errors.email, clearErrors]);
+
+    const isLocked = cooldown > 0;
+
     function submit(e) {
         e.preventDefault();
+
+        if (isLocked || processing) {
+            return;
+        }
 
         post('/login', {
             onError: () => reset('password'),
@@ -51,7 +87,13 @@ const Login = () => {
                             onChange={e => setData('email', e.target.value)}
                             aria-invalid={!!errors.email}
                         />
-                        <FieldError message={errors.email} />
+                        {isLocked ? (
+                            <p role="alert" className="min-h-5 text-sm text-destructive wrap-break">
+                                Too many login attempts. Please try again in {cooldown} seconds.
+                            </p>
+                        ) : (
+                            <FieldError message={errors.email} />
+                        )}
                     </div>
 
                     <div className="space-y-1">
@@ -88,8 +130,8 @@ const Login = () => {
                         <Label htmlFor="remember" className="mb-0">Remember me</Label>
                     </div>
 
-                    <Button type="submit" disabled={processing} className='w-full mt-2'>
-                        {processing ? 'Logging in...' : 'Login'}
+                    <Button type="submit" disabled={processing || isLocked} className='w-full mt-2'>
+                        {processing ? 'Logging in...' : isLocked ? `Try again in ${cooldown}s` : 'Login'}
                     </Button>
 
                 </form >
@@ -100,7 +142,7 @@ const Login = () => {
                 <img
                     src="/images/bg-image.jpg"
                     alt="Background"
-                    className="absolute inset-0 h-full w-full object-cover object-bottom"
+                    className="absolute h-full w-full object-cover object-bottom"
                 />
 
                 <div className="glass">
