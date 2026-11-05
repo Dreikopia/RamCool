@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\ProductStatus;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -22,6 +23,7 @@ class ProductFactory extends Factory
         return [
             'name' => ucwords(fake()->unique()->words(3, true)),
             'sku' => strtoupper(fake()->unique()->bothify('AC-#####')),
+            'status' => ProductStatus::ACTIVE,
             'category_id' => Category::factory(),
             'unit_price' => fake()->randomFloat(2, 5, 500),
             'reorder_level' => fake()->numberBetween(3, 20),
@@ -35,6 +37,16 @@ class ProductFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'current_stock' => fake()->numberBetween(0, $attributes['reorder_level']),
+        ]);
+    }
+
+    /**
+     * Indicate that the product is no longer sold in new transactions.
+     */
+    public function inactive(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => ProductStatus::INACTIVE,
         ]);
     }
 

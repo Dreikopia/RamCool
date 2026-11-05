@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\ProductStatus;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreProductRequest extends FormRequest
 {
@@ -26,6 +28,7 @@ class StoreProductRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'sku' => ['required', 'string', 'max:255', 'unique:products,sku'],
+            'status' => ['sometimes', 'required', Rule::enum(ProductStatus::class)],
             'category_id' => ['required', 'exists:categories,id'],
             'supplier_id' => ['nullable', 'exists:suppliers,id'],
             'unit_price' => ['required', 'numeric', 'min:0'],

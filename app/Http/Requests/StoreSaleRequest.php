@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\ProductStatus;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -29,7 +30,9 @@ class StoreSaleRequest extends FormRequest
                 'required',
                 'integer',
                 'distinct',
-                Rule::exists('products', 'id')->whereNull('deleted_at'),
+                Rule::exists('products', 'id')
+                    ->whereNull('deleted_at')
+                    ->where('status', ProductStatus::ACTIVE->value),
             ],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'remarks' => ['nullable', 'string', 'max:255'],
@@ -41,6 +44,7 @@ class StoreSaleRequest extends FormRequest
         return [
             'items.required' => 'Add at least one product to the cart.',
             'items.min' => 'Add at least one product to the cart.',
+            'items.*.product_id.exists' => 'One of the selected products is not available for sale.',
         ];
     }
 }

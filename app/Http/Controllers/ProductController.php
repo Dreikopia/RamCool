@@ -13,14 +13,16 @@ use Inertia\Inertia;
 class ProductController extends Controller
 {
     /**
-     * Render the products page with a sample product listing.
-     *
-     * @return array<int, array{ id: int, name: stroing, sku: string, stock: int, status: string }>
+     * Render the products page with the product listing.
      */
     public function index()
     {
         return Inertia::render('Products/Index', [
-            'products' => Product::with(['category', 'supplier'])->latest()->get(),
+            'products' => Product::with([
+                'category',
+                'supplier',
+                'inventory:id,product_id,quantity',
+            ])->latest()->get(),
             'categories' => Category::orderBy('name')->get(),
             'suppliers' => Supplier::orderBy('name')->get(['id', 'name']),
         ]);

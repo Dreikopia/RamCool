@@ -178,6 +178,7 @@ class DashboardService
     public function restockItems(): Collection
     {
         return Product::query()
+            ->active()
             ->with(['inventory.movements.user:id,name', 'category:id,name', 'supplier:id,name'])
             ->where(function (Builder $query): void {
                 $query->whereDoesntHave('inventory')
@@ -214,6 +215,7 @@ class DashboardService
     private function stockLevelCount(string $level): int
     {
         return Product::query()
+            ->active()
             ->where(function (Builder $query) use ($level): void {
                 if ($level === 'out') {
                     $query->whereDoesntHave('inventory')

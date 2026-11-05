@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\ProductStatus;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -33,6 +34,7 @@ class UpdateProductRequest extends FormRequest
                 'max:255',
                 Rule::unique('products', 'sku')->ignore($this->route('product')),
             ],
+            'status' => ['sometimes', 'required', Rule::enum(ProductStatus::class)],
             'category_id' => ['required', 'exists:categories,id'],
             'supplier_id' => ['nullable', 'exists:suppliers,id'],
             'unit_price' => ['required', 'numeric', 'min:0'],

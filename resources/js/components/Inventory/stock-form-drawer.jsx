@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/sheet';
 import { Minus, Plus } from 'lucide-react';
 import ProductThumbnail from '../products/product-thumbnail';
+import ProductStatusBadge from '../products/product-status-badge';
 import StockStatusBadge from '../products/status-badge';
 import { Textarea } from '../ui/textarea';
 import MovementTypeBadge from '../movements/movement-type-badge';
@@ -169,9 +170,16 @@ const StockFormDrawer = ({ open, onOpenChange, inventory, initialMode = 'in', pr
                             </p>
                         </div>
                         <div className='gap-y-1'>
-                            <StockStatusBadge
-                                status={inventory?.product?.stock_status}
-                                className="shrink-0" />
+                            <div className="flex flex-wrap items-center justify-end gap-1">
+                                <ProductStatusBadge
+                                    status={inventory?.product?.status}
+                                    className="shrink-0"
+                                />
+                                <StockStatusBadge
+                                    status={inventory?.product?.stock_status}
+                                    className="shrink-0"
+                                />
+                            </div>
                             <p className="text-sm text-muted-foreground">
                                 Reorder at{'   '}
                                 <span className="text-xl font-medium text-foreground">

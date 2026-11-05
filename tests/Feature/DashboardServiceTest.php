@@ -62,6 +62,12 @@ it('counts low stock and out of stock products separately', function () {
     $healthy = Product::factory()->create(['reorder_level' => 10]);
     Inventory::factory()->for($healthy)->create(['quantity' => 40]);
 
+    $inactiveLow = Product::factory()->inactive()->create(['reorder_level' => 10]);
+    Inventory::factory()->for($inactiveLow)->create(['quantity' => 4]);
+
+    $inactiveOut = Product::factory()->inactive()->create(['reorder_level' => 10]);
+    Inventory::factory()->for($inactiveOut)->create(['quantity' => 0]);
+
     $kpis = $this->service->kpis();
 
     expect($kpis['low_stock_count'])->toBe(1)
@@ -200,10 +206,14 @@ it('returns low and out of stock items for restocking, most urgent first', funct
     $out = Product::factory()->create(['reorder_level' => 10]);
     Inventory::factory()->for($out)->create(['quantity' => 0]);
 
+    $inactive = Product::factory()->inactive()->create(['reorder_level' => 10]);
+    Inventory::factory()->for($inactive)->create(['quantity' => 0]);
+
     $items = $this->service->restockItems();
 
     expect($items->pluck('id')->all())->toBe([$out->id, $low->id])
-        ->and($items->first()->stock_status['value'])->toBe('out_of_stock');
+        ->and($items->first()->stock_status['value'])->toBe('out_of_stock')
+        ->and($items->pluck('id')->all())->not->toContain($inactive->id);
 });
 
 it('includes the inventory and recent movements for the restock drawer', function () {

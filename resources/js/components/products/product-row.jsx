@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import ProductRowActions from '@/components/products/product-row-actions';
+import ProductStatusBadge from '@/components/products/product-status-badge';
 import ProductThumbnail from '@/components/products/product-thumbnail';
 import StockStatusBadge from '@/components/products/status-badge';
 import { cn } from 'cn';
@@ -34,6 +35,7 @@ const ProductRow = memo(({ product, className, onEdit, onDelete }) => (
         <span aria-hidden="true">·</span>
         <span className="tabular-nums">{product.in_stock} in stock</span>
 
+        <ProductStatusBadge status={product.status} />
         <StockStatusBadge status={product.stock_status} />
       </div>
     </div>

@@ -1,6 +1,8 @@
 <?php
 
+use App\Enums\ProductStatus;
 use App\Models\Category;
+use App\Models\Inventory;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
@@ -20,7 +22,6 @@ it('creates a product with an uploaded image', function () {
         'name' => '20x20x1 MERV 11 Filter',
         'sku' => 'AC-TEST-01',
         'category_id' => $category->id,
-        'in_stock' => 120,
         'unit_price' => 19.99,
         'reorder_level' => 25,
         'image' => UploadedFile::fake()->image('filter.jpg'),
@@ -32,10 +33,13 @@ it('creates a product with an uploaded image', function () {
 
     $product = Product::query()->where('sku', 'AC-TEST-01')->first();
 
-    expect($product)->not->toBeNull()
+    Inventory::factory()->for($product)->create(['quantity' => 120]);
+
+    expect($product->fresh())->not->toBeNull()
         ->and($product->name)->toBe('20x20x1 MERV 11 Filter')
         ->and($product->category_id)->toBe($category->id)
         ->and($product->in_stock)->toBe(120)
+        ->and($product->status)->toBe(ProductStatus::ACTIVE)
         ->and($product->reorder_level)->toBe(25)
         ->and($product->image_path)->toStartWith('images/products/');
 
@@ -49,7 +53,6 @@ it('creates a product without an image', function () {
         'name' => 'Smart Wi-Fi Thermostat',
         'sku' => 'AC-TEST-02',
         'category_id' => $category->id,
-        'in_stock' => 40,
         'unit_price' => 149.00,
         'reorder_level' => 10,
     ]);
@@ -69,7 +72,6 @@ it('rejects a product when the image is not a supported image file', function ()
         'name' => 'Duct Seam Mastic Sealant',
         'sku' => 'AC-TEST-03',
         'category_id' => $category->id,
-        'in_stock' => 15,
         'unit_price' => 9.50,
         'reorder_level' => 5,
         'image' => UploadedFile::fake()->create('manual.txt', 12, 'text/plain'),
@@ -83,7 +85,7 @@ it('rejects a product when the image is not a supported image file', function ()
 it('rejects a product with required fields missing', function () {
     $response = $this->post(route('products.store'), []);
 
-    $response->assertSessionHasErrors(['name', 'sku', 'category_id', 'in_stock', 'unit_price', 'reorder_level']);
+    $response->assertSessionHasErrors(['name', 'sku', 'category_id', 'unit_price', 'reorder_level']);
 
     $this->assertDatabaseCount('products', 0);
 });
@@ -95,7 +97,6 @@ it('rejects a product with a duplicate sku', function () {
         'name' => 'Another Filter',
         'sku' => $product->sku,
         'category_id' => $product->category_id,
-        'in_stock' => 10,
         'unit_price' => 12.00,
         'reorder_level' => 4,
     ]);
@@ -109,7 +110,6 @@ it('updates a product', function () {
     $product = Product::factory()->create([
         'name' => 'Old Name',
         'sku' => 'AC-UPDATE-01',
-        'in_stock' => 5,
     ]);
     $category = Category::factory()->create();
 
@@ -117,7 +117,7 @@ it('updates a product', function () {
         'name' => 'New Name',
         'sku' => $product->sku,
         'category_id' => $category->id,
-        'in_stock' => 88,
+        'status' => 'inactive',
         'unit_price' => 42.50,
         'reorder_level' => 12,
     ]);
@@ -129,7 +129,7 @@ it('updates a product', function () {
     expect($product->fresh())
         ->name->toBe('New Name')
         ->category_id->toBe($category->id)
-        ->in_stock->toBe(88)
+        ->status->toBe(ProductStatus::INACTIVE)
         ->unit_price->toBe(42.50)
         ->reorder_level->toBe(12);
 });
@@ -143,7 +143,6 @@ it('replaces the product image and deletes the previous file', function () {
         'name' => $product->name,
         'sku' => $product->sku,
         'category_id' => $product->category_id,
-        'in_stock' => $product->in_stock,
         'unit_price' => $product->unit_price,
         'reorder_level' => $product->reorder_level,
         'image' => UploadedFile::fake()->image('replacement.png'),
@@ -169,7 +168,6 @@ it('removes the product image when asked and no new file is sent', function () {
         'name' => $product->name,
         'sku' => $product->sku,
         'category_id' => $product->category_id,
-        'in_stock' => $product->in_stock,
         'unit_price' => $product->unit_price,
         'reorder_level' => $product->reorder_level,
         'remove_image' => true,
@@ -190,7 +188,6 @@ it('keeps the existing product image when neither is sent', function () {
         'name' => $product->name,
         'sku' => $product->sku,
         'category_id' => $product->category_id,
-        'in_stock' => 77,
         'unit_price' => $product->unit_price,
         'reorder_level' => $product->reorder_level,
     ])->assertRedirect(route('products'));
@@ -204,7 +201,7 @@ it('rejects an update with required fields missing', function () {
 
     $response = $this->put(route('products.update', $product), []);
 
-    $response->assertSessionHasErrors(['name', 'sku', 'category_id', 'in_stock', 'unit_price', 'reorder_level']);
+    $response->assertSessionHasErrors(['name', 'sku', 'category_id', 'unit_price', 'reorder_level']);
 
     expect($product->fresh()->name)->toBe($product->name);
 });
@@ -216,7 +213,6 @@ it('allows a product to keep its own sku on update', function () {
         'name' => $product->name,
         'sku' => 'AC-KEEP-01',
         'category_id' => $product->category_id,
-        'in_stock' => $product->in_stock,
         'unit_price' => $product->unit_price,
         'reorder_level' => $product->reorder_level,
     ]);
@@ -233,7 +229,6 @@ it('rejects an update with a sku taken by another product', function () {
         'name' => $product->name,
         'sku' => $taken->sku,
         'category_id' => $product->category_id,
-        'in_stock' => $product->in_stock,
         'unit_price' => $product->unit_price,
         'reorder_level' => $product->reorder_level,
     ]);
@@ -250,7 +245,6 @@ it('rejects an update when the image is not a supported image file', function ()
         'name' => $product->name,
         'sku' => $product->sku,
         'category_id' => $product->category_id,
-        'in_stock' => $product->in_stock,
         'unit_price' => $product->unit_price,
         'reorder_level' => $product->reorder_level,
         'image' => UploadedFile::fake()->create('manual.txt', 12, 'text/plain'),
@@ -267,7 +261,6 @@ it('adds an image to a product that has none without touching the disk', functio
         'name' => $product->name,
         'sku' => $product->sku,
         'category_id' => $product->category_id,
-        'in_stock' => $product->in_stock,
         'unit_price' => $product->unit_price,
         'reorder_level' => $product->reorder_level,
         'image' => UploadedFile::fake()->image('first.png'),
@@ -290,7 +283,6 @@ it('keeps the existing product image when remove_image is sent as false', functi
         'name' => $product->name,
         'sku' => $product->sku,
         'category_id' => $product->category_id,
-        'in_stock' => $product->in_stock,
         'unit_price' => $product->unit_price,
         'reorder_level' => $product->reorder_level,
         'remove_image' => '0',
@@ -304,15 +296,19 @@ it('keeps the existing product image when remove_image is sent as false', functi
     Storage::disk('public')->assertExists($product->image_path);
 });
 
-it('lists products with their appended stock status and image url', function () {
+it('lists products with their appended status, stock status, stock level and image url', function () {
     Storage::fake('public');
 
-    Product::factory()->create([
+    $active = Product::factory()->create([
         'sku' => 'AC-LIST-01',
-        'in_stock' => 100,
         'reorder_level' => 10,
     ]);
-    $withImage = Product::factory()->withImage()->create(['sku' => 'AC-LIST-02']);
+    Inventory::factory()->for($active)->create(['quantity' => 100]);
+
+    $withImage = Product::factory()->inactive()->withImage()->create([
+        'sku' => 'AC-LIST-02',
+    ]);
+    Inventory::factory()->for($withImage)->create(['quantity' => 50]);
 
     $this->get(route('products'))
         ->assertOk()
@@ -322,11 +318,15 @@ it('lists products with their appended stock status and image url', function () 
                 ->where('products', function (Collection $products) use ($withImage) {
                     $bySku = $products->keyBy('sku');
 
-                    expect($bySku['AC-LIST-01']['stock_status'])->toBe([
-                        'value' => 'in_stock',
-                        'label' => 'In stock',
-                    ])
+                    expect($bySku['AC-LIST-01']['status'])->toBe('active')
+                        ->and($bySku['AC-LIST-01']['in_stock'])->toBe(100)
+                        ->and($bySku['AC-LIST-01']['stock_status'])->toBe([
+                            'value' => 'in_stock',
+                            'label' => 'In stock',
+                        ])
                         ->and($bySku['AC-LIST-01']['image_url'])->toBeNull()
+                        ->and($bySku['AC-LIST-02']['status'])->toBe('inactive')
+                        ->and($bySku['AC-LIST-02']['in_stock'])->toBe(50)
                         ->and($bySku['AC-LIST-02']['stock_status']['value'])->toBe('in_stock')
                         ->and($bySku['AC-LIST-02']['image_url'])
                         ->toBe(Storage::disk('public')->url($withImage->image_path));
@@ -334,4 +334,36 @@ it('lists products with their appended stock status and image url', function () 
                     return true;
                 });
         });
+});
+
+it('creates an inactive product', function () {
+    $category = Category::factory()->create();
+
+    $this->post(route('products.store'), [
+        'name' => 'Retired Air Conditioner',
+        'sku' => 'AC-STATUS-01',
+        'status' => 'inactive',
+        'category_id' => $category->id,
+        'unit_price' => 250.00,
+        'reorder_level' => 2,
+    ])->assertRedirect(route('products'));
+
+    $product = Product::query()->where('sku', 'AC-STATUS-01')->sole();
+
+    expect($product->status)->toBe(ProductStatus::INACTIVE);
+});
+
+it('rejects an invalid product status', function () {
+    $category = Category::factory()->create();
+
+    $this->post(route('products.store'), [
+        'name' => 'Unknown Status Product',
+        'sku' => 'AC-STATUS-02',
+        'status' => 'discontinued',
+        'category_id' => $category->id,
+        'unit_price' => 10.00,
+        'reorder_level' => 1,
+    ])->assertSessionHasErrors('status');
+
+    expect(Product::query()->where('sku', 'AC-STATUS-02')->exists())->toBeFalse();
 });

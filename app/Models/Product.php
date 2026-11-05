@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ProductStatus;
 use App\Enums\StockStatus;
 use Database\Factories\ProductFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -24,16 +25,21 @@ class Product extends Model
      *
      * @var list<string>
      */
-    protected $appends = ['stock_status', 'image_url'];
+    protected $appends = ['stock_status', 'in_stock', 'image_url'];
 
     protected $fillable = [
         'name',
         'image_path',
         'sku',
+        'status',
         'category_id',
         'supplier_id',
         'unit_price',
         'reorder_level',
+    ];
+
+    protected $casts = [
+        'status' => ProductStatus::class,
     ];
 
     protected function imageUrl(): Attribute
@@ -53,6 +59,11 @@ class Product extends Model
 
             return ['value' => $status->value, 'label' => $status->label()];
         });
+    }
+
+    protected function inStock(): Attribute
+    {
+        return Attribute::get(fn (): int => $this->inventory?->quantity ?? 0);
     }
 
     /**
@@ -76,6 +87,28 @@ class Product extends Model
             $query->where('name', 'like', "%{$term}%")
                 ->orWhere('sku', 'like', "%{$term}%");
         });
+    }
+
+    /**
+     * Narrow the query to products that can be sold in new transactions.
+     *
+     * @param  Builder<Product>  $query
+     * @return Builder<Product>
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('status', ProductStatus::ACTIVE->value);
+    }
+
+    /**
+     * Narrow the query to products that are no longer sold in new transactions.
+     *
+     * @param  Builder<Product>  $query
+     * @return Builder<Product>
+     */
+    public function scopeInactive(Builder $query): Builder
+    {
+        return $query->where('status', ProductStatus::INACTIVE->value);
     }
 
     public function saleItems()

@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\MovementType;
+use App\Enums\ProductStatus;
 use App\Models\Inventory;
 use App\Models\Product;
 use App\Models\User;
@@ -43,6 +44,23 @@ it('deducts stock and records a stock out movement', function () {
     expect($movement->type)->toBe(MovementType::STOCK_OUT)
         ->and($movement->quantity)->toBe(-10)
         ->and($movement->user_id)->toBe($this->user->id);
+});
+
+it('allows stock movements for inactive products', function () {
+    $this->inventory->product->update(['status' => ProductStatus::INACTIVE]);
+
+    $this->actingAs($this->user)->post(route('stock-in', $this->inventory), [
+        'quantity' => 10,
+        'remarks' => 'Returned from customer',
+    ])->assertRedirect();
+
+    $this->post(route('stock-out', $this->inventory), [
+        'quantity' => 5,
+        'remarks' => 'Written off',
+    ])->assertRedirect();
+
+    expect($this->inventory->fresh()->quantity)->toBe(55)
+        ->and($this->inventory->movements()->count())->toBe(2);
 });
 
 it('rejects a stock out that exceeds the available stock', function () {

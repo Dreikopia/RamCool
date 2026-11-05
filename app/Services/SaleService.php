@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\ProductStatus;
 use App\Enums\SaleStatus;
 use App\Models\Product;
 use App\Models\Sale;
@@ -31,6 +32,12 @@ class SaleService
             foreach (collect($items)->sortBy('product_id') as $item) {
                 $product = Product::with('inventory')->findOrFail($item['product_id']);
                 $quantity = (int) $item['quantity'];
+
+                if ($product->status !== ProductStatus::ACTIVE) {
+                    throw ValidationException::withMessages([
+                        'items' => "{$product->name}: product is inactive and cannot be sold.",
+                    ]);
+                }
 
                 if ($product->inventory === null) {
                     throw ValidationException::withMessages([

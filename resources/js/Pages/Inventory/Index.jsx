@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/table';
 import AppLayout from '@/Layouts/AppLayout';
 import StockFormDrawer from '@/components/Inventory/stock-form-drawer';
+import ProductStatusBadge from '@/components/products/product-status-badge';
 import StockStatusBadge from '@/components/products/status-badge';
 import { Pen } from 'lucide-react';
 
@@ -59,7 +60,10 @@ const Index = ({ inventories }) => {
                                 </TableCell>
 
                                 <TableCell className="text-center">
-                                    <StockStatusBadge status={product.stock_status} />
+                                    <div className="flex flex-wrap items-center justify-center gap-1">
+                                        <ProductStatusBadge status={product.status} />
+                                        <StockStatusBadge status={product.stock_status} />
+                                    </div>
                                 </TableCell>
 
                                 <TableCell className="text-center">

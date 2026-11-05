@@ -1,12 +1,14 @@
 <?php
 
 use App\Enums\MovementType;
+use App\Enums\ProductStatus;
 use App\Enums\SaleStatus;
 use App\Models\Inventory;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\User;
 use App\Services\SaleService;
+use Illuminate\Validation\ValidationException;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
@@ -105,6 +107,20 @@ it('renders the create page with products and their inventory', function () {
             ->where('products.0.id', $product->id)
             ->where('products.0.name', 'Split Air Conditioner')
             ->where('products.0.inventory.quantity', 12)
+        );
+});
+
+it('only lists active products on the create page', function () {
+    Product::factory()->create(['name' => 'Active Unit']);
+    Product::factory()->inactive()->create(['name' => 'Retired Unit']);
+
+    $this->get(route('sales.create'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Sales/Create')
+            ->has('products', 1)
+            ->where('products.0.name', 'Active Unit')
+            ->where('productCount', 1)
         );
 });
 
@@ -220,6 +236,28 @@ it('rejects the same product twice in one sale', function () {
     $this->assertDatabaseCount('sales', 0);
 });
 
+it('rejects an inactive product in a sale', function () {
+    $product = Product::factory()->inactive()->create();
+    Inventory::factory()->for($product)->create(['quantity' => 10]);
+
+    $this->post(route('sales.store'), [
+        'items' => [['product_id' => $product->id, 'quantity' => 1]],
+    ])->assertSessionHasErrors('items.0.product_id');
+
+    $this->assertDatabaseCount('sales', 0);
+});
+
+it('rejects an inactive product when creating a sale directly', function () {
+    $product = Product::factory()->inactive()->create();
+    Inventory::factory()->for($product)->create(['quantity' => 10]);
+
+    expect(fn () => app(SaleService::class)->createSale([
+        ['product_id' => $product->id, 'quantity' => 1],
+    ], $this->user->id))->toThrow(ValidationException::class);
+
+    $this->assertDatabaseCount('sales', 0);
+});
+
 it('rejects a product that does not exist', function () {
     $this->post(route('sales.store'), [
         'items' => [['product_id' => 999999, 'quantity' => 1]],
@@ -320,6 +358,22 @@ it('rejects voiding an already voided sale', function () {
 
     expect($inventory->fresh()->quantity)->toBe(10)
         ->and($inventory->movements()->count())->toBe(2);
+});
+
+it('restores stock when voiding a sale whose product is now inactive', function () {
+    $product = Product::factory()->create(['unit_price' => 10.00]);
+    $inventory = Inventory::factory()->for($product)->create(['quantity' => 10]);
+
+    $sale = app(SaleService::class)->createSale([
+        ['product_id' => $product->id, 'quantity' => 2],
+    ], $this->user->id);
+
+    $product->update(['status' => ProductStatus::INACTIVE]);
+
+    $this->patch(route('sales.void', $sale))->assertRedirect(route('sales'));
+
+    expect($sale->fresh()->status)->toBe(SaleStatus::VOIDED)
+        ->and($inventory->fresh()->quantity)->toBe(10);
 });
 
 it('restores stock when voiding a sale whose product was soft deleted', function () {
