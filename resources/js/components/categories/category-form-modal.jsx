@@ -1,8 +1,9 @@
 import { useForm } from "@inertiajs/react";
 import { useEffect, useLayoutEffect } from "react";
-import { Button } from "@/Components/ui/button";
-import { Input } from "@/Components/ui/input";
-import { Label } from "@/Components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
     Dialog,
     DialogContent,
@@ -11,17 +12,21 @@ import {
     DialogHeader,
     DialogTitle,
     DialogClose
-} from "@/Components/ui/dialog";
+} from "@/components/ui/dialog";
 
 const CategoryFormModal = ({ open, onOpenChange, category }) => {
     const isEdit = Boolean(category)
 
     const { data, setData, post, patch, processing, errors, recentlySuccessful } = useForm({
-        name: ''
+        name: '',
+        description: '',
     })
 
     useLayoutEffect(() => {
-        setData({ name: category?.name ?? '' });
+        setData({
+            name: category?.name ?? '',
+            description: category?.description ?? '',
+        });
     }, [open, category]);
 
     useEffect(() => {
@@ -47,7 +52,7 @@ const CategoryFormModal = ({ open, onOpenChange, category }) => {
                         <DialogTitle>{isEdit ? 'Edit category' : 'New category'}</DialogTitle>
                         <DialogDescription>
                             {isEdit
-                                ? 'Give this category a new name.'
+                                ? 'Update this category’s name or description.'
                                 : 'Group related products under one category.'}
                         </DialogDescription>
                     </DialogHeader>
@@ -64,6 +69,20 @@ const CategoryFormModal = ({ open, onOpenChange, category }) => {
                             autoFocus
                         />
                         {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
+                    </div>
+
+                    <div className="grid gap-1.5">
+                        <Label htmlFor="category-description">Description <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                        <Textarea
+                            id="category-description"
+                            value={data.description}
+                            onChange={(e) => setData('description', e.target.value)}
+                            placeholder="Filters that capture 99.97% of airborne particles."
+                            rows={3}
+                            aria-invalid={Boolean(errors.description)}
+                            disabled={processing}
+                        />
+                        {errors.description && <p className="text-xs text-destructive">{errors.description}</p>}
                     </div>
 
                     <DialogFooter>

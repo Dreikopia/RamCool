@@ -28,8 +28,9 @@ class StoreCategoryRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('categories', 'name')->ignore($this->route('category')),
+                Rule::unique('categories', 'name'),
             ],
+            'description' => ['nullable', 'string', 'max:1000'],
         ];
     }
 }

@@ -1,4 +1,4 @@
-import { Ellipsis, Lock, Pencil, Trash } from 'lucide-react';
+import { Ellipsis, Pencil, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -9,8 +9,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 const CategoryRowActions = ({ category, onEdit, onDelete }) => {
-    const productCount = category.products_count;
-
     return (
         <DropdownMenu>
 
@@ -29,17 +27,10 @@ const CategoryRowActions = ({ category, onEdit, onDelete }) => {
 
                 <DropdownMenuSeparator />
 
-                {productCount > 0 ? (
-                    <DropdownMenuItem disabled>
-                        <Lock />
-                        Reassign {productCount} {productCount === 1 ? 'product' : 'products'} first
-                    </DropdownMenuItem>
-                ) : (
-                    <DropdownMenuItem variant="destructive" onClick={() => onDelete(category)}>
-                        <Trash />
-                        Delete
-                    </DropdownMenuItem>
-                )}
+                <DropdownMenuItem variant="destructive" onClick={() => onDelete(category)}>
+                    <Trash />
+                    Delete
+                </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
     );

@@ -19,6 +19,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/categories', [CategoryController::class, 'index'])->name('categories');
     Route::post('/categories', [CategoryController::class, 'store'])->name('category.store');
     Route::patch('/categories/{category}', [CategoryController::class, 'update'])->name('category.update');
+    Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('category.destroy');
 
     Route::get('/suppliers', [SupplierController::class, 'index'])->name('suppliers');
     Route::post('/suppliers', [SupplierController::class, 'store'])->name('suppliers.store');
