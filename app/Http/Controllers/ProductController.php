@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ProductStatus;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Supplier;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
@@ -15,16 +17,30 @@ class ProductController extends Controller
     /**
      * Render the products page with the product listing.
      */
-    public function index()
+    public function index(Request $request)
     {
+
+        $search = $request->string('search')->value();
+
+        $status = ProductStatus::tryFrom($request->string('status')->value());
+
         return Inertia::render('Products/Index', [
             'products' => Product::with([
                 'category',
                 'supplier',
                 'inventory:id,product_id,quantity',
-            ])->latest()->get(),
+            ])
+                ->search($search)
+                ->when($status, fn ($query) => $query->where('status', $status->value))
+                ->latest()
+                ->get(),
             'categories' => Category::orderBy('name')->get(),
             'suppliers' => Supplier::orderBy('name')->get(['id', 'name']),
+
+            'filters' => [
+                'search' => $search,
+                'status' => $status?->value,
+            ],
         ]);
     }
 

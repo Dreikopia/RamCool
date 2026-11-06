@@ -20,11 +20,6 @@ class Product extends Model
 
     use SoftDeletes;
 
-    /**
-     * Attributes that are computed rather than stored on the table.
-     *
-     * @var list<string>
-     */
     protected $appends = ['stock_status', 'in_stock', 'image_url'];
 
     protected $fillable = [
@@ -66,15 +61,6 @@ class Product extends Model
         return Attribute::get(fn (): int => $this->inventory?->quantity ?? 0);
     }
 
-    /**
-     * Narrow the query to products whose name or SKU contains the search term.
-     *
-     * The `orWhere` is wrapped in a closure so it can never escape and
-     * override another constraint such as a soft-delete or category filter.
-     *
-     * @param  Builder<Product>  $query
-     * @return Builder<Product>
-     */
     public function scopeSearch(Builder $query, ?string $term): Builder
     {
         $term = trim((string) $term);
@@ -89,23 +75,11 @@ class Product extends Model
         });
     }
 
-    /**
-     * Narrow the query to products that can be sold in new transactions.
-     *
-     * @param  Builder<Product>  $query
-     * @return Builder<Product>
-     */
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('status', ProductStatus::ACTIVE->value);
     }
 
-    /**
-     * Narrow the query to products that are no longer sold in new transactions.
-     *
-     * @param  Builder<Product>  $query
-     * @return Builder<Product>
-     */
     public function scopeInactive(Builder $query): Builder
     {
         return $query->where('status', ProductStatus::INACTIVE->value);
