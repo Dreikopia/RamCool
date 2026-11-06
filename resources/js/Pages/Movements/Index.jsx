@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/table";
 import AppLayout from "@/Layouts/AppLayout";
 import MovementTypeBadge from "@/components/movements/movement-type-badge";
+import { router } from "@inertiajs/react";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 const TYPE_OPTIONS = [
     { value: "all", label: "All" },
@@ -23,8 +25,35 @@ const TYPE_OPTIONS = [
 
 const signed = (quantity) => (quantity > 0 ? `+${quantity}` : `${quantity}`);
 
-const Index = ({ movements }) => {
+const visit = (search) => {
+    router.get(
+        window.location.pathname,
+        { search: search || undefined },
+        {
+            only: ["movements", "filters"],
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        },
+    );
+};
+
+
+
+const Index = ({ movements, filters }) => {
+
     const [type, setType] = useState("all");
+
+    const [search, setSearch] = useState(filters.search ?? '');
+
+    const debouncedSearch = useDebouncedValue(search.trim(), 300);
+
+    useEffect(() => {
+        if (debouncedSearch === (filters.search ?? '')) return;
+
+        visit(debouncedSearch);
+    }, [debouncedSearch])
+
 
     const visible = movements.filter(
         (movement) => type === "all" || movement.type === type
@@ -33,9 +62,15 @@ const Index = ({ movements }) => {
     return (
         <div className="space-y-4 p-6">
             <div className="flex flex-wrap items-center gap-3">
-                <div className="relative">
+
+                <div className="relative w-sm">
                     <Search className="absolute top-2.5 left-2.5 size-4 text-muted-foreground" />
-                    <Input placeholder="Search product or SKU" className="pl-8" />
+                    <Input
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder="Search Product SKU or Sales Id"
+                        className="pl-8"
+                    />
                 </div>
 
                 <div
@@ -59,20 +94,36 @@ const Index = ({ movements }) => {
             </div>
 
             {movements.length === 0 ? (
-                <div className="rounded-xl border border-sidebar-border bg-card py-12 text-center">
-                    <p className="text-muted-foreground">No movements yet.</p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                        Stock changes will show up here once inventory is added or adjusted.
-                    </p>
-                </div>
-            ) : visible.length === 0 ? (
-                <div className="rounded-xl border border-sidebar-border bg-card py-12 text-center">
-                    <p className="text-muted-foreground">No movements match these filters.</p>
-                    <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => setType("all")}>
-                        Clear filters
-                    </Button>
-                </div>
-            ) : (
+                filters.search ? (
+                    <div className="rounded-xl border border-sidebar-border bg-card py-12 text-center">
+                        <p className="text-muted-foreground">
+                            No movements found for "{filters.search}".
+                        </p>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="mt-4"
+                            onClick={() => setSearch("")}
+                        >
+                            Clear search
+                        </Button>
+                    </div>
+                ) : (
+                    <div className="rounded-xl border border-sidebar-border bg-card py-12 text-center">
+                        <p className="text-muted-foreground">No movements yet.</p>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                            Stock changes will show up here once inventory is added or adjusted.
+                        </p>
+                    </div>
+                )) : visible.length === 0 ? (
+                    <div className="rounded-xl border border-sidebar-border bg-card py-12 text-center">
+                        <p className="text-muted-foreground">No movements match these filters.</p>
+                        <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => setType("all")}>
+                            Clear filters
+                        </Button>
+                    </div>
+                ) : (
                 <div className="rounded-xl border border-sidebar-border bg-card">
                     <Table>
                         <TableHeader>

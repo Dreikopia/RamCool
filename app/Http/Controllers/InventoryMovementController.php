@@ -7,19 +7,30 @@ use App\Http\Requests\StockMovementRequest;
 use App\Models\Inventory;
 use App\Models\InventoryMovement;
 use App\Services\InventoryService;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class InventoryMovementController extends Controller
 {
     public function __construct(private InventoryService $inventoryService) {}
 
-    public function index()
+    public function index(Request $request)
     {
+
+        $search = $request->string('search')->value();
+
         return Inertia::render('Movements/Index', [
             'movements' => InventoryMovement::with([
                 'inventory.product',
                 'user',
-            ])->latest()->get(),
+            ])
+                ->search($search)
+                ->latest()
+                ->get(),
+
+            'filters' => [
+                'search' => $search,
+            ],
         ]);
     }
 
