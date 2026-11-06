@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\MovementType;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
@@ -48,6 +49,11 @@ class InventoryMovement extends Model
         };
     }
 
+    public function scopeOfType(Builder $query, ?MovementType $type): Builder
+    {
+        return $query->when($type, fn (Builder $query) => $query->where('type', $type));
+    }
+
     public function scopeSearch(Builder $query, ?string $term): Builder
     {
         $term = trim((string) $term);
@@ -58,17 +64,46 @@ class InventoryMovement extends Model
 
         $like = '%'.addcslashes($term, '%_\\').'%';
 
-        return $query->where(function (Builder $query) use ($like) {
+        return $query->where(function (Builder $query) use ($like): void {
             $query->where('remarks', 'like', $like)
-                ->orWhereHas('inventory.product', function (Builder $product) use ($like) {
-                    $product->where(function (Builder $product) use ($like) {
+                ->orWhereHas('inventory.product', function (Builder $product) use ($like): void {
+                    $product->where(function (Builder $product) use ($like): void {
                         $product->where('name', 'like', $like)
                             ->orWhere('sku', 'like', $like);
                     });
-                })
-                ->orWhereHas('sale', function (Builder $sale) use ($like) {
-                    $sale->where('sales_number', 'like', $like);
                 });
         });
+    }
+
+    /**
+     * @param  array<int, int>  $productIds
+     */
+    public function scopeForProducts(Builder $query, array $productIds = []): Builder
+    {
+        return $query->when(
+            $productIds !== [],
+            fn (Builder $query) => $query->whereHas(
+                'inventory',
+                fn (Builder $query) => $query->whereIn('product_id', $productIds),
+            ),
+        );
+    }
+
+    /**
+     * @param  array<int, int>  $userIds
+     */
+    public function scopeByUsers(Builder $query, array $userIds = []): Builder
+    {
+        return $query->when(
+            $userIds !== [],
+            fn (Builder $query) => $query->whereIn('user_id', $userIds),
+        );
+    }
+
+    public function scopeCreatedBetween(Builder $query, ?CarbonInterface $from, ?CarbonInterface $to): Builder
+    {
+        return $query
+            ->when($from, fn (Builder $query) => $query->where('created_at', '>=', $from))
+            ->when($to, fn (Builder $query) => $query->where('created_at', '<=', $to));
     }
 }
