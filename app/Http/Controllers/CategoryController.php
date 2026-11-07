@@ -8,6 +8,7 @@ use App\Models\Category;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -18,15 +19,26 @@ class CategoryController extends Controller
      */
     public function index(Request $request): Response
     {
-        $search = $request->string('search')->value();
+        $validated = $request->validate([
+            'search' => ['nullable', 'string', 'max:255'],
+            'has_products' => ['nullable', Rule::in(['with', 'empty'])],
+        ]);
+
+        $search = trim((string) ($validated['search'] ?? ''));
+        $hasProducts = $validated['has_products'] ?? null;
 
         return Inertia::render('Categories/Index', [
             'categories' => Category::withCount('products')
                 ->search($search)
+                ->when($hasProducts === 'with', fn ($query) => $query->has('products'))
+                ->when($hasProducts === 'empty', fn ($query) => $query->doesntHave('products'))
                 ->orderBy('name')
-                ->get(),
+                ->orderBy('id')
+                ->paginate(10)
+                ->withQueryString(),
             'filters' => [
                 'search' => $search,
+                'has_products' => $hasProducts,
             ],
         ]);
     }

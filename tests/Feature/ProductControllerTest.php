@@ -314,8 +314,8 @@ it('lists products with their appended status, stock status, stock level and ima
         ->assertOk()
         ->assertInertia(function (Assert $page) use ($withImage) {
             $page->component('Products/Index')
-                ->has('products', 2)
-                ->where('products', function (Collection $products) use ($withImage) {
+                ->has('products.data', 2)
+                ->where('products.data', function (Collection $products) use ($withImage) {
                     $bySku = $products->keyBy('sku');
 
                     expect($bySku['AC-LIST-01']['status'])->toBe('active')

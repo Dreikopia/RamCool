@@ -1,133 +1,157 @@
-import { useEffect, useState } from 'react';
-import { router } from '@inertiajs/react';
-import { Search } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useState } from 'react';
 import AppLayout from '@/Layouts/AppLayout';
+import CategoryDeleteDialog from '@/components/categories/category-delete-dialog';
 import CategoryFormModal from '@/components/categories/category-form-modal';
 import CategoryRowActions from '@/components/categories/category-row-actions';
-import CategoryDeleteDialog from '@/components/categories/category-delete-dialog';
-import { useDebouncedValue } from '@/hooks/use-debounced-value';
+import { DataTableCard } from '@/components/data-table-card';
+import { FilterTabs } from '@/components/filters/filter-tabs';
+import { SearchInput } from '@/components/filters/search-input';
+import { ListEmptyState } from '@/components/list-empty-state';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import { useFilters } from '@/hooks/use-filters';
 
-const visit = (search) => {
-    router.get(
-        '/categories',
-        { search: search || undefined },
-        {
-            only: ['categories', 'filters'],
-            preserveState: true,
-            preserveScroll: true,
-            replace: true,
-        },
-    );
+const PRODUCT_TABS = [
+    { value: 'all', label: 'All' },
+    { value: 'with', label: 'With products' },
+    { value: 'empty', label: 'Empty' },
+];
+
+const DEFAULT_FILTERS = {
+    search: '',
+    has_products: 'all',
 };
 
-const Index = ({ categories, filters }) => {
+const ONLY_PROPS = ['categories', 'filters'];
+
+const Index = ({
+    categories = { data: [], links: [], total: 0 },
+    filters: initialFilters,
+}) => {
     const [modal, setModal] = useState({ open: false, category: null });
     const [deleting, setDeleting] = useState(null);
-    const [search, setSearch] = useState(filters.search ?? '');
-    const debouncedSearch = useDebouncedValue(search.trim(), 300);
 
-    useEffect(() => {
-        if (debouncedSearch === (filters.search ?? '')) {
-            return;
-        }
-
-        visit(debouncedSearch);
-    }, [debouncedSearch]);
+    const { filters, setFilter, clearAll, isPending } = useFilters({
+        initialFilters,
+        defaults: DEFAULT_FILTERS,
+        only: ONLY_PROPS,
+    });
 
     const openCreate = () => setModal({ open: true, category: null });
     const openEdit = (category) => setModal({ open: true, category });
 
-    return (
-        <>
-            <div className="flex flex-wrap items-center gap-3">
-                <div className="relative w-full max-w-sm">
-                    <Search className="absolute top-2.5 left-2.5 size-4 text-muted-foreground" />
-                    <Input
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Search by name..."
-                        className="pl-8"
-                        aria-label="Search categories"
-                    />
-                </div>
+    const hasFilters =
+        filters.search.trim() !== '' || filters.has_products !== 'all';
 
-                <Button onClick={openCreate} variant="secondary">
-                    Add Category
+    const toolbar = (
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+            <SearchInput
+                value={filters.search}
+                onChange={(value) => setFilter('search', value)}
+                placeholder="Search by name…"
+                ariaLabel="Search categories"
+                className="w-full lg:w-70"
+            />
+
+            <div className="ml-auto flex flex-wrap items-center gap-2">
+                <FilterTabs
+                    options={PRODUCT_TABS}
+                    value={filters.has_products}
+                    onChange={(value) => setFilter('has_products', value)}
+                    ariaLabel="Filter categories by products"
+                    className="min-w-0"
+                />
+
+                <Button onClick={openCreate} variant="secondary" size="sm">
+                    Add category
                 </Button>
             </div>
+        </div>
+    );
 
-            <div className="rounded-md border bg-muted">
+    return (
+        <>
+            <DataTableCard
+                toolbar={toolbar}
+                isEmpty={categories.data.length === 0}
+                isPending={isPending}
+                paginator={categories}
+                only={ONLY_PROPS}
+                itemLabel="categories"
+                empty={
+                    hasFilters ? (
+                        <ListEmptyState
+                            title="No categories match these filters"
+                            actionLabel="Clear filters"
+                            onAction={clearAll}
+                        />
+                    ) : (
+                        <ListEmptyState
+                            title="No categories yet."
+                            description="Add a category to organize your products."
+                            actionLabel="Add your first category"
+                            onAction={openCreate}
+                        />
+                    )
+                }
+            >
                 <Table>
                     <TableHeader>
-                        <TableRow>
-                            <TableHead>Category</TableHead>
-                            <TableHead>Description</TableHead>
-                            <TableHead>Products</TableHead>
-                            <TableHead className='text-right'>
+                        <TableRow className="bg-muted/40 hover:bg-muted/40">
+                            <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
+                                Category
+                            </TableHead>
+                            <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
+                                Description
+                            </TableHead>
+                            <TableHead className="h-9 px-4 text-right text-xs font-medium text-muted-foreground">
+                                Products
+                            </TableHead>
+                            <TableHead className="h-9 px-4 text-right text-xs font-medium text-muted-foreground">
                                 Actions
                             </TableHead>
                         </TableRow>
                     </TableHeader>
 
                     <TableBody>
-                        {categories.length === 0 ? (
-                            filters.search ? (
-                                <TableRow>
-                                    <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
-                                        No categories found for "{filters.search}".
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="ml-3"
-                                            onClick={() => setSearch('')}
-                                        >
-                                            Clear search
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                <TableRow>
-                                    <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
-                                        No categories yet.
-                                    </TableCell>
-                                </TableRow>
-                            )
-                        ) : (
-                            categories.map((category) => (
-                                <TableRow key={category.id}>
-                                    <TableCell className="font-medium">
-                                        {category.name}
-                                    </TableCell>
-                                    <TableCell className="max-w-xs text-muted-foreground">
-                                        {category.description ?? '—'}
-                                    </TableCell>
-                                    <TableCell>
-                                        <Badge>
-                                            {category.products_count} products
-                                        </Badge>
-                                    </TableCell>
+                        {categories.data.map((category) => (
+                            <TableRow key={category.id} className="align-middle">
+                                <TableCell className="px-4 py-3 text-left font-medium">
+                                    {category.name}
+                                </TableCell>
 
-                                    <TableCell className="text-right">
-                                        <div className='flex justify-end'>
-                                            <CategoryRowActions
-                                                category={category}
-                                                onEdit={openEdit}
-                                                onDelete={setDeleting}
-                                            />
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            ))
-                        )}
+                                <TableCell className="max-w-[28rem] truncate px-4 py-3 text-left text-sm text-muted-foreground">
+                                    {category.description ?? '—'}
+                                </TableCell>
 
+                                <TableCell className="px-4 py-3 text-right">
+                                    <Badge variant="secondary">
+                                        {category.products_count} products
+                                    </Badge>
+                                </TableCell>
+
+                                <TableCell className="px-4 py-3 text-right">
+                                    <div className="flex justify-end">
+                                        <CategoryRowActions
+                                            category={category}
+                                            onEdit={openEdit}
+                                            onDelete={setDeleting}
+                                        />
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        ))}
                     </TableBody>
                 </Table>
-
-            </div>
+            </DataTableCard>
 
             <CategoryFormModal
                 open={modal.open}
@@ -145,7 +169,7 @@ const Index = ({ categories, filters }) => {
             />
         </>
     );
-}
+};
 
 Index.layout = (page) => <AppLayout title="Categories">{page}</AppLayout>;
 

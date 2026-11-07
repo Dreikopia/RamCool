@@ -1,136 +1,281 @@
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState } from 'react';
 import AppLayout from '@/Layouts/AppLayout';
+import { DataTableCard } from '@/components/data-table-card';
+import { CheckboxListFilter } from '@/components/filters/checkbox-list-filter';
+import { FilterBar } from '@/components/filters/filter-bar';
+import { FilterTabs } from '@/components/filters/filter-tabs';
+import { SearchInput } from '@/components/filters/search-input';
+import { ListEmptyState } from '@/components/list-empty-state';
 import ProductFormDrawer from '@/components/products/product-form-drawer';
+import ProductRowActions from '@/components/products/product-row-actions';
+import ProductStatusBadge from '@/components/products/product-status-badge';
+import ProductThumbnail from '@/components/products/product-thumbnail';
+import StockStatusBadge from '@/components/products/status-badge';
 import { Button } from '@/components/ui/button';
-import ProductRow from '@/components/products/product-row';
-import { Input } from '@/components/ui/input';
-import { useDebouncedValue } from '@/hooks/use-debounced-value';
-import { router } from '@inertiajs/react';
-import { cn } from 'cn';
+import Currency from '@/components/ui/currency';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import { useFilters } from '@/hooks/use-filters';
 
 const STATUS_OPTIONS = [
-  { value: 'all', label: 'All' },
-  { value: 'active', label: 'Active' },
-  { value: 'inactive', label: 'Inactive' },
+    { value: 'all', label: 'All' },
+    { value: 'active', label: 'Active' },
+    { value: 'inactive', label: 'Inactive' },
 ];
 
-const visit = ({ search, status }) => {
-  router.get(
-    window.location.pathname,
-    {
-      search: search || undefined,
-      status: status === 'all' ? undefined : status,
-    },
-    {
-      only: ['products', 'filters'],
-      preserveState: true,
-      preserveScroll: true,
-      replace: true,
-    },
-  );
+const DEFAULT_FILTERS = {
+    search: '',
+    status: 'all',
+    categories: [],
+    suppliers: [],
 };
 
-const Index = ({ products, categories, suppliers, filters }) => {
-  const [drawer, setDrawer] = useState({ open: false, product: null });
-  const [search, setSearch] = useState(filters.search ?? '');
-  const debounceSearch = useDebouncedValue(search.trim(), 300);
-  const currentStatus = filters.status ?? 'all';
+const ONLY_PROPS = ['products', 'categories', 'suppliers', 'filters'];
 
-  useEffect(() => {
-    if (debounceSearch === filters.search ?? '') return;
+const Index = ({
+    products = { data: [], links: [], total: 0 },
+    categories = [],
+    suppliers = [],
+    filters: initialFilters,
+}) => {
+    const [drawer, setDrawer] = useState({ open: false, product: null });
 
-    visit({ search: debounceSearch, status: currentStatus });
+    const { filters, setFilter, removeFilters, clearAll, isPending } = useFilters({
+        initialFilters,
+        defaults: DEFAULT_FILTERS,
+        only: ONLY_PROPS,
+    });
 
-  }, [debounceSearch])
+    const openCreate = useCallback(() => setDrawer({ open: true, product: null }), []);
+    const openEdit = useCallback((product) => setDrawer({ open: true, product }), []);
 
-  const changeStatus = (status) => {
-    if (status === currentStatus) return;
+    const chips = [];
 
-    visit({ search: search.trim(), status });
-  };
+    if (filters.categories.length > 0) {
+        const categoryLabel = filters.categories.length === 1 ? 'category' : 'categories';
 
-  const openCreate = useCallback(() => setDrawer({ open: true, product: null }), []);
-  const openEdit = useCallback((product) => setDrawer({ open: true, product }), []);
+        chips.push({
+            key: 'categories',
+            label: `${filters.categories.length} ${categoryLabel}`,
+            onRemove: () => removeFilters(['categories']),
+        });
+    }
 
-  return (
-    <>
-      <div className="flex flex-wrap items-center gap-3">
-        <Input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name or SKU..."
-          className="max-w-sm"
-        />
+    if (filters.suppliers.length > 0) {
+        const supplierLabel = filters.suppliers.length === 1 ? 'supplier' : 'suppliers';
 
-        <div
-          role="group"
-          aria-label="Filter by status"
-          className="inline-flex rounded-full bg-muted p-1"
-        >
-          {STATUS_OPTIONS.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => changeStatus(option.value)}
-              aria-pressed={currentStatus === option.value}
-              className={cn(
-                'rounded-full px-3 py-1 text-sm transition-colors',
-                currentStatus === option.value
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground',
-              )}
-            >
-              {option.label}
-            </button>
-          ))}
+        chips.push({
+            key: 'suppliers',
+            label: `${filters.suppliers.length} ${supplierLabel}`,
+            onRemove: () => removeFilters(['suppliers']),
+        });
+    }
+
+    const activeCount = chips.length;
+
+    const hasFilters =
+        filters.search.trim() !== '' ||
+        filters.status !== 'all' ||
+        activeCount > 0;
+
+    const filterFields = [
+        {
+            key: 'categories',
+            label: 'Categories',
+            active: filters.categories.length > 0,
+            count: filters.categories.length,
+            content: (
+                <CheckboxListFilter
+                    options={categories.map((category) => ({
+                        value: category.id,
+                        label: category.name,
+                    }))}
+                    selected={filters.categories}
+                    onChange={(values) => setFilter('categories', values)}
+                    searchPlaceholder="Search categories…"
+                    listClassName="max-h-[min(55vh,20rem)]"
+                />
+            ),
+        },
+        {
+            key: 'suppliers',
+            label: 'Suppliers',
+            active: filters.suppliers.length > 0,
+            count: filters.suppliers.length,
+            content: (
+                <CheckboxListFilter
+                    options={suppliers.map((supplier) => ({
+                        value: supplier.id,
+                        label: supplier.name,
+                    }))}
+                    selected={filters.suppliers}
+                    onChange={(values) => setFilter('suppliers', values)}
+                    searchPlaceholder="Search suppliers…"
+                    listClassName="max-h-[min(55vh,20rem)]"
+                />
+            ),
+        },
+    ];
+
+    const toolbar = (
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+            <SearchInput
+                value={filters.search}
+                onChange={(value) => setFilter('search', value)}
+                placeholder="Search name or SKU…"
+                ariaLabel="Search products"
+                className="w-full lg:w-70"
+            />
+
+            <FilterBar
+                fields={filterFields}
+                activeCount={activeCount}
+                chips={chips}
+                canClear={hasFilters}
+                onClearAll={clearAll}
+            />
+
+            <div className="ml-auto flex flex-wrap items-center gap-2">
+                <FilterTabs
+                    options={STATUS_OPTIONS}
+                    value={filters.status}
+                    onChange={(value) => setFilter('status', value)}
+                    ariaLabel="Filter by product status"
+                    className="min-w-0"
+                />
+
+                <Button onClick={openCreate} size="sm">
+                    New product
+                </Button>
+            </div>
         </div>
+    );
 
-        <Button onClick={openCreate} variant="secondary">
-          New product
-        </Button>
-      </div>
+    return (
+        <>
+            <DataTableCard
+                toolbar={toolbar}
+                isEmpty={products.data.length === 0}
+                isPending={isPending}
+                paginator={products}
+                only={ONLY_PROPS}
+                itemLabel="products"
+                empty={
+                    hasFilters ? (
+                        <ListEmptyState
+                            title="No products match these filters"
+                            actionLabel="Clear filters"
+                            onAction={clearAll}
+                        />
+                    ) : (
+                        <ListEmptyState
+                            title="No products yet."
+                            description="Add your first product to start tracking inventory."
+                            actionLabel="Add your first product"
+                            onAction={openCreate}
+                        />
+                    )
+                }
+            >
+                <Table>
+                    <TableHeader>
+                        <TableRow className="bg-muted/40 hover:bg-muted/40">
+                            <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
+                                Product
+                            </TableHead>
+                            <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
+                                Category
+                            </TableHead>
+                            <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
+                                Supplier
+                            </TableHead>
+                            <TableHead className="h-9 px-4 text-right text-xs font-medium text-muted-foreground">
+                                Stock
+                            </TableHead>
+                            <TableHead className="h-9 px-4 text-right text-xs font-medium text-muted-foreground">
+                                Price
+                            </TableHead>
+                            <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
+                                Status
+                            </TableHead>
+                            <TableHead className="h-9 px-4 text-right text-xs font-medium text-muted-foreground">
+                                Actions
+                            </TableHead>
+                        </TableRow>
+                    </TableHeader>
 
-      <div className="rounded-xl border border-sidebar-border bg-card">
+                    <TableBody>
+                        {products.data.map((product) => (
+                            <TableRow key={product.id} className="align-middle">
+                                <TableCell className="px-4 py-3 text-left">
+                                    <div className="flex items-center gap-3">
+                                        <ProductThumbnail
+                                            product={product}
+                                            className="size-9 rounded-md"
+                                        />
 
-        {products.length === 0 ? (
-          filters.search ? (
-            <div className="py-12 text-center">
-              <p className="text-muted-foreground">
-                No products found for "{filters.search}".
-              </p>
-              <Button
-                className="mt-4"
-                variant="outline"
-                onClick={() => setSearch('')}
-              >
-                Clear search
-              </Button>
-            </div>
-          ) :
-            <div className="py-12 text-center">
-              <p className="text-muted-foreground">No products yet.</p>
-              <Button className="mt-4" variant="outline" onClick={openCreate}>
-                Add your first product
-              </Button>
-            </div>
-        ) : (
-          <ul className="divide-y divide-sidebar-border">
-            {products.map((product) => (
-              <ProductRow key={product.id} product={product} onEdit={openEdit} />
-            ))}
-          </ul>
-        )}
-      </div>
+                                        <div className="min-w-0">
+                                            <div className="max-w-[16rem] truncate font-medium">
+                                                {product.name}
+                                            </div>
+                                            <div className="mt-0.5 text-xs text-muted-foreground">
+                                                {product.sku}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </TableCell>
 
-      <ProductFormDrawer
-        open={drawer.open}
-        onOpenChange={(open) => setDrawer((current) => ({ ...current, open }))}
-        product={drawer.product}
-        categories={categories}
-        suppliers={suppliers}
-      />
-    </>
-  );
+                                <TableCell className="px-4 py-3 text-left text-sm">
+                                    {product.category?.name ?? '—'}
+                                </TableCell>
+
+                                <TableCell className="px-4 py-3 text-left text-sm">
+                                    {product.supplier?.name ?? '—'}
+                                </TableCell>
+
+                                <TableCell className="px-4 py-3 text-right">
+                                    <div className="flex flex-col items-end gap-1">
+                                        <span className="font-medium tabular-nums">
+                                            {product.in_stock}
+                                        </span>
+                                        <StockStatusBadge status={product.stock_status} />
+                                    </div>
+                                </TableCell>
+
+                                <TableCell className="px-4 py-3 text-right font-medium">
+                                    <Currency value={product.unit_price} />
+                                </TableCell>
+
+                                <TableCell className="px-4 py-3 text-left">
+                                    <ProductStatusBadge status={product.status} />
+                                </TableCell>
+
+                                <TableCell className="px-4 py-3 text-right">
+                                    <div className="flex justify-end">
+                                        <ProductRowActions product={product} onEdit={openEdit} />
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </DataTableCard>
+
+            <ProductFormDrawer
+                open={drawer.open}
+                onOpenChange={(open) => setDrawer((current) => ({ ...current, open }))}
+                product={drawer.product}
+                categories={categories}
+                suppliers={suppliers}
+            />
+        </>
+    );
 };
 
 Index.layout = (page) => <AppLayout title="Products">{page}</AppLayout>;

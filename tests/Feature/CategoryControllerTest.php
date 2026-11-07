@@ -26,8 +26,8 @@ it('lists categories with product counts and descriptions', function () {
         ->assertOk()
         ->assertInertia(function (Assert $page) {
             $page->component('Categories/Index')
-                ->has('categories', 2)
-                ->where('categories', function (Collection $categories) {
+                ->has('categories.data', 2)
+                ->where('categories.data', function (Collection $categories) {
                     $byName = $categories->keyBy('name');
 
                     expect($byName['HEPA Filters']['description'])
@@ -50,8 +50,8 @@ it('filters categories by name', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Categories/Index')
-            ->has('categories', 1)
-            ->where('categories.0.name', 'HEPA Filters')
+            ->has('categories.data', 1)
+            ->where('categories.data.0.name', 'HEPA Filters')
             ->where('filters.search', 'hepa'));
 });
 

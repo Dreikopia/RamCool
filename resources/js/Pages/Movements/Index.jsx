@@ -1,5 +1,13 @@
 import { format } from 'date-fns';
-import { Button } from '@/components/ui/button';
+import AppLayout from '@/Layouts/AppLayout';
+import { DataTableCard } from '@/components/data-table-card';
+import { CheckboxListFilter } from '@/components/filters/checkbox-list-filter';
+import { DateRangeFilter, getDateRangeLabel } from '@/components/filters/date-range-filter';
+import { FilterBar } from '@/components/filters/filter-bar';
+import { FilterTabs } from '@/components/filters/filter-tabs';
+import { SearchInput } from '@/components/filters/search-input';
+import { ListEmptyState } from '@/components/list-empty-state';
+import MovementTypeBadge from '@/components/movements/movement-type-badge';
 import {
     Table,
     TableBody,
@@ -8,16 +16,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import AppLayout from '@/Layouts/AppLayout';
-import { CheckboxListFilter } from '@/components/filters/checkbox-list-filter';
-import { DateRangeFilter, getDateRangeLabel } from '@/components/filters/date-range-filter';
-import { FilterBar } from '@/components/filters/filter-bar';
-import { FilterTabs } from '@/components/filters/filter-tabs';
-import { SearchInput } from '@/components/filters/search-input';
-import MovementTypeBadge from '@/components/movements/movement-type-badge';
-import { DataPagination } from '@/components/data-pagination';
 import { useFilters } from '@/hooks/use-filters';
-import { cn } from 'cn';
 
 const signed = (quantity) => (quantity > 0 ? `+${quantity}` : `${quantity}`);
 
@@ -139,156 +138,135 @@ const Index = ({
         },
     ];
 
-    return (
-        <div>
-            <div className="rounded-xl border border-border bg-card shadow-sm">
-                <div className="border-b border-border p-3">
-                    <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-                        <SearchInput
-                            value={filters.search}
-                            onChange={(value) => setFilter('search', value)}
-                            placeholder="Search product, SKU, or Remarks…"
-                            ariaLabel="Search movements"
-                            className="w-full lg:w-70"
-                        />
+    const toolbar = (
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+            <SearchInput
+                value={filters.search}
+                onChange={(value) => setFilter('search', value)}
+                placeholder="Search product, SKU, or Remarks…"
+                ariaLabel="Search movements"
+                className="w-full lg:w-70"
+            />
 
-                        <FilterBar
-                            fields={filterFields}
-                            activeCount={activeCount}
-                            chips={chips}
-                            canClear={hasFilters}
-                            onClearAll={clearAll}
-                        />
-                        <div className="ml-auto">
-                            <FilterTabs
-                                options={TYPE_TABS}
-                                value={filters.type}
-                                onChange={(value) => setFilter('type', value)}
-                                ariaLabel="Filter by movement type"
-                                className="min-w-0"
-                            />
-                        </div>
-                    </div>
-                </div>
+            <FilterBar
+                fields={filterFields}
+                activeCount={activeCount}
+                chips={chips}
+                canClear={hasFilters}
+                onClearAll={clearAll}
+            />
 
-                {movements.data.length === 0 ? (
-                    hasFilters ? (
-                        <div className="py-12 text-center">
-                            <p className="text-muted-foreground">
-                                No movements match these filters
-                            </p>
-
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                className="mt-4"
-                                onClick={clearAll}
-                            >
-                                Clear filters
-                            </Button>
-                        </div>
-                    ) : (
-                        <div className="py-12 text-center">
-                            <p className="text-muted-foreground">No movements yet.</p>
-                            <p className="mt-1 text-sm text-muted-foreground">
-                                Stock changes will show up here once inventory is added or adjusted.
-                            </p>
-                        </div>
-                    )
-                ) : (
-                    <div
-                        className={cn(
-                            'transition-opacity',
-                            isPending && 'pointer-events-none opacity-60',
-                        )}
-                    >
-                        <Table>
-                            <TableHeader>
-                                <TableRow className="bg-muted/40 hover:bg-muted/40">
-                                    <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
-                                        Product
-                                    </TableHead>
-                                    <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
-                                        Type
-                                    </TableHead>
-                                    <TableHead className="h-9 px-4 text-right text-xs font-medium text-muted-foreground">
-                                        Change
-                                    </TableHead>
-                                    <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
-                                        Remarks
-                                    </TableHead>
-                                    <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
-                                        By
-                                    </TableHead>
-                                    <TableHead className="h-9 px-4 text-center text-xs font-medium text-muted-foreground">
-                                        Date
-                                    </TableHead>
-                                </TableRow>
-                            </TableHeader>
-
-                            <TableBody>
-                                {movements.data.map((movement) => (
-                                    <TableRow key={movement.id} className="align-middle">
-                                        <TableCell className="max-w-[16rem] px-2 py-2 text-left">
-                                            <div className="truncate font-medium">
-                                                {movement.inventory?.product?.name}
-                                            </div>
-                                            <div className="mt-0.5 text-xs text-muted-foreground">
-                                                {movement.inventory?.product?.sku}
-                                            </div>
-                                        </TableCell>
-
-                                        <TableCell className="px-4 py-3 text-left">
-                                            <MovementTypeBadge type={movement.type} />
-                                        </TableCell>
-
-                                        <TableCell className="px-4 py-3 text-right font-medium tabular-nums">
-                                            <span
-                                                className={
-                                                    movement.quantity > 0
-                                                        ? 'text-green-600 dark:text-green-400'
-                                                        : 'text-red-600 dark:text-red-400'
-                                                }
-                                            >
-                                                {signed(movement.quantity)}
-                                            </span>
-                                        </TableCell>
-
-                                        <TableCell className="max-w-[18rem] truncate px-4 py-3 text-left text-sm text-muted-foreground">
-                                            {movement.remarks ?? '—'}
-                                        </TableCell>
-
-                                        <TableCell className="px-4 py-3 text-left text-sm">
-                                            {movement.user?.name ?? 'System'}
-                                        </TableCell>
-
-                                        <TableCell className="px-4 py-3 text-right text-sm text-muted-foreground">
-                                            <time
-                                                dateTime={movement.created_at}
-                                                className="tabular-nums"
-                                            >
-                                                {format(
-                                                    new Date(movement.created_at),
-                                                    'MMM d, yyyy · h:mm a',
-                                                )}
-                                            </time>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-
-                        <DataPagination
-                            paginator={movements}
-                            only={ONLY_PROPS}
-                            itemLabel="movements"
-                            className="px-4"
-                        />
-                    </div>
-                )}
+            <div className="ml-auto">
+                <FilterTabs
+                    options={TYPE_TABS}
+                    value={filters.type}
+                    onChange={(value) => setFilter('type', value)}
+                    ariaLabel="Filter by movement type"
+                    className="min-w-0"
+                />
             </div>
         </div>
+    );
+
+    return (
+        <DataTableCard
+            toolbar={toolbar}
+            isEmpty={movements.data.length === 0}
+            isPending={isPending}
+            paginator={movements}
+            only={ONLY_PROPS}
+            itemLabel="movements"
+            empty={
+                hasFilters ? (
+                    <ListEmptyState
+                        title="No movements match these filters"
+                        actionLabel="Clear filters"
+                        onAction={clearAll}
+                    />
+                ) : (
+                    <ListEmptyState
+                        title="No movements yet."
+                        description="Stock changes will show up here once inventory is added or adjusted."
+                    />
+                )
+            }
+        >
+            <Table>
+                <TableHeader>
+                    <TableRow className="bg-muted/40 hover:bg-muted/40">
+                        <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
+                            Product
+                        </TableHead>
+                        <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
+                            Type
+                        </TableHead>
+                        <TableHead className="h-9 px-4 text-right text-xs font-medium text-muted-foreground">
+                            Change
+                        </TableHead>
+                        <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
+                            Remarks
+                        </TableHead>
+                        <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
+                            By
+                        </TableHead>
+                        <TableHead className="h-9 px-4 text-right text-xs font-medium text-muted-foreground">
+                            Date
+                        </TableHead>
+                    </TableRow>
+                </TableHeader>
+
+                <TableBody>
+                    {movements.data.map((movement) => (
+                        <TableRow key={movement.id} className="align-middle">
+                            <TableCell className="max-w-[16rem] px-4 py-3 text-left">
+                                <div className="truncate font-medium">
+                                    {movement.inventory?.product?.name}
+                                </div>
+                                <div className="mt-0.5 text-xs text-muted-foreground">
+                                    {movement.inventory?.product?.sku}
+                                </div>
+                            </TableCell>
+
+                            <TableCell className="px-4 py-3 text-left">
+                                <MovementTypeBadge type={movement.type} />
+                            </TableCell>
+
+                            <TableCell className="px-4 py-3 text-right font-medium tabular-nums">
+                                <span
+                                    className={
+                                        movement.quantity > 0
+                                            ? 'text-green-600 dark:text-green-400'
+                                            : 'text-red-600 dark:text-red-400'
+                                    }
+                                >
+                                    {signed(movement.quantity)}
+                                </span>
+                            </TableCell>
+
+                            <TableCell className="max-w-[18rem] truncate px-4 py-3 text-left text-sm text-muted-foreground">
+                                {movement.remarks ?? '—'}
+                            </TableCell>
+
+                            <TableCell className="px-4 py-3 text-left text-sm">
+                                {movement.user?.name ?? 'System'}
+                            </TableCell>
+
+                            <TableCell className="px-4 py-3 text-right text-sm text-muted-foreground">
+                                <time
+                                    dateTime={movement.created_at}
+                                    className="tabular-nums"
+                                >
+                                    {format(
+                                        new Date(movement.created_at),
+                                        'MMM d, yyyy · h:mm a',
+                                    )}
+                                </time>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </DataTableCard>
     );
 };
 

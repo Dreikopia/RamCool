@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class ProductController extends Controller
@@ -19,10 +20,21 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
+        $validated = $request->validate([
+            'search' => ['nullable', 'string', 'max:255'],
+            'status' => ['nullable', Rule::enum(ProductStatus::class)],
+            'categories' => ['nullable', 'array'],
+            'categories.*' => ['integer', 'distinct', Rule::exists('categories', 'id')],
+            'suppliers' => ['nullable', 'array'],
+            'suppliers.*' => ['integer', 'distinct', Rule::exists('suppliers', 'id')],
+        ]);
 
-        $search = $request->string('search')->value();
-
-        $status = ProductStatus::tryFrom($request->string('status')->value());
+        $search = trim((string) ($validated['search'] ?? ''));
+        $status = isset($validated['status'])
+            ? ProductStatus::from($validated['status'])
+            : null;
+        $categoryIds = array_map('intval', $validated['categories'] ?? []);
+        $supplierIds = array_map('intval', $validated['suppliers'] ?? []);
 
         return Inertia::render('Products/Index', [
             'products' => Product::with([
@@ -32,14 +44,26 @@ class ProductController extends Controller
             ])
                 ->search($search)
                 ->when($status, fn ($query) => $query->where('status', $status->value))
+                ->when(
+                    $categoryIds !== [],
+                    fn ($query) => $query->whereIn('category_id', $categoryIds),
+                )
+                ->when(
+                    $supplierIds !== [],
+                    fn ($query) => $query->whereIn('supplier_id', $supplierIds),
+                )
                 ->latest()
-                ->get(),
+                ->orderByDesc('id')
+                ->paginate(8)
+                ->withQueryString(),
             'categories' => Category::orderBy('name')->get(),
             'suppliers' => Supplier::orderBy('name')->get(['id', 'name']),
 
             'filters' => [
                 'search' => $search,
                 'status' => $status?->value,
+                'categories' => $categoryIds,
+                'suppliers' => $supplierIds,
             ],
         ]);
     }
