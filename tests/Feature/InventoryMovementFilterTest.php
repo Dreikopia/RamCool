@@ -62,8 +62,8 @@ it('filters movements by type', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Movements/Index')
-            ->has('movements', 1)
-            ->where('movements.0.id', $stockOut->id)
+            ->has('movements.data', 1)
+            ->where('movements.data.0.id', $stockOut->id)
             ->where('filters.type', MovementType::STOCK_OUT->value)
         );
 });
@@ -73,18 +73,18 @@ it('searches remarks, product names and skus', function () {
     $damaged = createFilterMovement($this->thermostatInventory, ['remarks' => 'Damaged on arrival']);
 
     $this->get(route('movements.index', ['search' => 'HEPA']))
-        ->assertInertia(fn (Assert $page) => $page->has('movements', 1));
+        ->assertInertia(fn (Assert $page) => $page->has('movements.data', 1));
 
     $this->get(route('movements.index', ['search' => 'AC-200']))
         ->assertInertia(fn (Assert $page) => $page
-            ->has('movements', 1)
-            ->where('movements.0.id', $damaged->id)
+            ->has('movements.data', 1)
+            ->where('movements.data.0.id', $damaged->id)
         );
 
     $this->get(route('movements.index', ['search' => 'Damaged']))
         ->assertInertia(fn (Assert $page) => $page
-            ->has('movements', 1)
-            ->where('movements.0.id', $damaged->id)
+            ->has('movements.data', 1)
+            ->where('movements.data.0.id', $damaged->id)
         );
 });
 
@@ -103,8 +103,8 @@ it('groups search conditions so they cannot bypass other filters', function () {
         'search' => 'matching term',
         'type' => MovementType::STOCK_OUT->value,
     ]))->assertInertia(fn (Assert $page) => $page
-        ->has('movements', 1)
-        ->where('movements.0.id', $stockOut->id)
+        ->has('movements.data', 1)
+        ->where('movements.data.0.id', $stockOut->id)
     );
 });
 
@@ -124,8 +124,8 @@ it('filters by multiple products and users', function () {
         'products' => [$this->filterProduct->id],
         'users' => [$this->otherUser->id],
     ]))->assertInertia(fn (Assert $page) => $page
-        ->has('movements', 1)
-        ->where('movements.0.id', $matching->id)
+        ->has('movements.data', 1)
+        ->where('movements.data.0.id', $matching->id)
         ->where('filters.products', [$this->filterProduct->id])
         ->where('filters.users', [$this->otherUser->id])
     );
@@ -149,9 +149,9 @@ it('filters movements between two dates inclusively', function () {
         'from' => '2026-11-01',
         'to' => '2026-11-05',
     ]))->assertInertia(fn (Assert $page) => $page
-        ->has('movements', 2)
-        ->where('movements.0.id', $lastDay->id)
-        ->where('movements.1.id', $firstDay->id)
+        ->has('movements.data', 2)
+        ->where('movements.data.0.id', $lastDay->id)
+        ->where('movements.data.1.id', $firstDay->id)
     );
 });
 
@@ -188,6 +188,32 @@ it('returns the current filters', function () {
         ->where('filters.from', '2026-11-01')
         ->where('filters.to', '2026-11-05')
     );
+});
+
+it('paginates movements ten at a time and keeps filters in the links', function () {
+    foreach (range(1, 12) as $index) {
+        createFilterMovement($this->filterInventory, [
+            'remarks' => "Movement {$index}",
+        ]);
+    }
+
+    $this->get(route('movements.index', ['search' => 'Movement']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('movements.data', 10)
+            ->where('movements.current_page', 1)
+            ->where('movements.last_page', 2)
+            ->where('movements.total', 12)
+            ->where(
+                'movements.links.2.url',
+                route('movements.index', ['search' => 'Movement', 'page' => 2]),
+            )
+        );
+
+    $this->get(route('movements.index', ['search' => 'Movement', 'page' => 2]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('movements.data', 2)
+            ->where('movements.current_page', 2)
+        );
 });
 
 it('rejects invalid filter values', function () {

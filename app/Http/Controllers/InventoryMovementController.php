@@ -63,7 +63,9 @@ class InventoryMovementController extends Controller
                 ->byUsers($userIds)
                 ->createdBetween($from, $to)
                 ->latest()
-                ->get(),
+                ->orderByDesc('id')
+                ->paginate(8)
+                ->withQueryString(),
 
             'products' => Product::query()
                 ->whereHas('inventory.movements')

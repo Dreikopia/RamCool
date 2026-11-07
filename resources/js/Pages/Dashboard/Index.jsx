@@ -51,6 +51,7 @@ const movementNumber = (id) => `#MOV-${String(id).padStart(4, '0')}`;
 
 const formatMovementDate = (value) => format(new Date(value), 'MMM d, yyyy');
 
+
 const TREND_STYLES = {
     up: 'border-transparent bg-green-500/15 text-green-700 dark:text-green-400',
     down: 'border-transparent bg-destructive/15 text-destructive',

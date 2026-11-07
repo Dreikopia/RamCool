@@ -15,6 +15,7 @@ import { FilterBar } from '@/components/filters/filter-bar';
 import { FilterTabs } from '@/components/filters/filter-tabs';
 import { SearchInput } from '@/components/filters/search-input';
 import MovementTypeBadge from '@/components/movements/movement-type-badge';
+import { DataPagination } from '@/components/data-pagination';
 import { useFilters } from '@/hooks/use-filters';
 import { cn } from 'cn';
 
@@ -38,7 +39,12 @@ const DEFAULT_FILTERS = {
 
 const ONLY_PROPS = ['movements', 'filters', 'products', 'users'];
 
-const Index = ({ movements = [], products = [], users = [], filters: initialFilters }) => {
+const Index = ({
+    movements = { data: [], links: [], total: 0 },
+    products = [],
+    users = [],
+    filters: initialFilters,
+}) => {
     const { filters, setFilter, setFilters, removeFilters, clearAll, isPending } = useFilters({
         initialFilters,
         defaults: DEFAULT_FILTERS,
@@ -134,7 +140,7 @@ const Index = ({ movements = [], products = [], users = [], filters: initialFilt
     ];
 
     return (
-        <div className="p-2 sm:p-6">
+        <div>
             <div className="rounded-xl border border-border bg-card shadow-sm">
                 <div className="border-b border-border p-3">
                     <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
@@ -165,7 +171,7 @@ const Index = ({ movements = [], products = [], users = [], filters: initialFilt
                     </div>
                 </div>
 
-                {movements.length === 0 ? (
+                {movements.data.length === 0 ? (
                     hasFilters ? (
                         <div className="py-12 text-center">
                             <p className="text-muted-foreground">
@@ -199,43 +205,45 @@ const Index = ({ movements = [], products = [], users = [], filters: initialFilt
                     >
                         <Table>
                             <TableHeader>
-                                <TableRow>
-                                    <TableHead className="px-3 text-left">When</TableHead>
-                                    <TableHead className="px-3 text-left">Product</TableHead>
-                                    <TableHead className="px-3 text-left">Type</TableHead>
-                                    <TableHead className="px-3 text-right">Change</TableHead>
-                                    <TableHead className="px-3 text-left">Remarks</TableHead>
-                                    <TableHead className="px-3 text-left">By</TableHead>
+                                <TableRow className="bg-muted/40 hover:bg-muted/40">
+                                    <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
+                                        Product
+                                    </TableHead>
+                                    <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
+                                        Type
+                                    </TableHead>
+                                    <TableHead className="h-9 px-4 text-right text-xs font-medium text-muted-foreground">
+                                        Change
+                                    </TableHead>
+                                    <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
+                                        Remarks
+                                    </TableHead>
+                                    <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
+                                        By
+                                    </TableHead>
+                                    <TableHead className="h-9 px-4 text-center text-xs font-medium text-muted-foreground">
+                                        Date
+                                    </TableHead>
                                 </TableRow>
                             </TableHeader>
 
                             <TableBody>
-                                {movements.map((movement) => (
-                                    <TableRow key={movement.id}>
-                                        <TableCell className="px-3 text-left">
-                                            <time
-                                                dateTime={movement.created_at}
-                                                className="tabular-nums"
-                                            >
-                                                {format(
-                                                    new Date(movement.created_at),
-                                                    'MMM d, yyyy · h:mm a',
-                                                )}
-                                            </time>
-                                        </TableCell>
-
-                                        <TableCell className="px-3 text-left">
-                                            <div>{movement.inventory?.product?.name}</div>
-                                            <div className="text-xs text-muted-foreground">
+                                {movements.data.map((movement) => (
+                                    <TableRow key={movement.id} className="align-middle">
+                                        <TableCell className="max-w-[16rem] px-2 py-2 text-left">
+                                            <div className="truncate font-medium">
+                                                {movement.inventory?.product?.name}
+                                            </div>
+                                            <div className="mt-0.5 text-xs text-muted-foreground">
                                                 {movement.inventory?.product?.sku}
                                             </div>
                                         </TableCell>
 
-                                        <TableCell className="px-3 text-left">
+                                        <TableCell className="px-4 py-3 text-left">
                                             <MovementTypeBadge type={movement.type} />
                                         </TableCell>
 
-                                        <TableCell className="px-3 text-right font-medium tabular-nums">
+                                        <TableCell className="px-4 py-3 text-right font-medium tabular-nums">
                                             <span
                                                 className={
                                                     movement.quantity > 0
@@ -247,17 +255,36 @@ const Index = ({ movements = [], products = [], users = [], filters: initialFilt
                                             </span>
                                         </TableCell>
 
-                                        <TableCell className="max-w-[10rem] truncate px-3 text-left text-sm text-muted-foreground">
+                                        <TableCell className="max-w-[18rem] truncate px-4 py-3 text-left text-sm text-muted-foreground">
                                             {movement.remarks ?? '—'}
                                         </TableCell>
 
-                                        <TableCell className="px-3 text-left">
+                                        <TableCell className="px-4 py-3 text-left text-sm">
                                             {movement.user?.name ?? 'System'}
+                                        </TableCell>
+
+                                        <TableCell className="px-4 py-3 text-right text-sm text-muted-foreground">
+                                            <time
+                                                dateTime={movement.created_at}
+                                                className="tabular-nums"
+                                            >
+                                                {format(
+                                                    new Date(movement.created_at),
+                                                    'MMM d, yyyy · h:mm a',
+                                                )}
+                                            </time>
                                         </TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
                         </Table>
+
+                        <DataPagination
+                            paginator={movements}
+                            only={ONLY_PROPS}
+                            itemLabel="movements"
+                            className="px-4"
+                        />
                     </div>
                 )}
             </div>
