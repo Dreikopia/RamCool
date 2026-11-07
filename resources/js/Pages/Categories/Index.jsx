@@ -124,21 +124,21 @@ const Index = ({
                     <TableBody>
                         {categories.data.map((category) => (
                             <TableRow key={category.id} className="align-middle">
-                                <TableCell className="px-4 py-3 text-left font-medium">
+                                <TableCell className="px-4 py-2 text-left font-medium">
                                     {category.name}
                                 </TableCell>
 
-                                <TableCell className="max-w-[28rem] truncate px-4 py-3 text-left text-sm text-muted-foreground">
+                                <TableCell className="max-w-[28rem] truncate px-4 py-2 text-left text-sm text-muted-foreground">
                                     {category.description ?? '—'}
                                 </TableCell>
 
-                                <TableCell className="px-4 py-3 text-right">
+                                <TableCell className="px-4 py-2 text-right">
                                     <Badge variant="secondary">
                                         {category.products_count} products
                                     </Badge>
                                 </TableCell>
 
-                                <TableCell className="px-4 py-3 text-right">
+                                <TableCell className="px-4 py-2 text-right">
                                     <div className="flex justify-end">
                                         <CategoryRowActions
                                             category={category}

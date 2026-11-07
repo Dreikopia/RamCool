@@ -218,7 +218,7 @@ const Index = ({
                 <TableBody>
                     {movements.data.map((movement) => (
                         <TableRow key={movement.id} className="align-middle">
-                            <TableCell className="max-w-[16rem] px-4 py-3 text-left">
+                            <TableCell className="max-w-[16rem] px-4 py-2 text-left">
                                 <div className="truncate font-medium">
                                     {movement.inventory?.product?.name}
                                 </div>
@@ -227,11 +227,11 @@ const Index = ({
                                 </div>
                             </TableCell>
 
-                            <TableCell className="px-4 py-3 text-left">
+                            <TableCell className="px-4 py-2 text-left">
                                 <MovementTypeBadge type={movement.type} />
                             </TableCell>
 
-                            <TableCell className="px-4 py-3 text-right font-medium tabular-nums">
+                            <TableCell className="px-4 py-2 text-right font-medium tabular-nums">
                                 <span
                                     className={
                                         movement.quantity > 0
@@ -243,15 +243,15 @@ const Index = ({
                                 </span>
                             </TableCell>
 
-                            <TableCell className="max-w-[18rem] truncate px-4 py-3 text-left text-sm text-muted-foreground">
+                            <TableCell className="max-w-[18rem] truncate px-4 py-2 text-left text-sm text-muted-foreground">
                                 {movement.remarks ?? '—'}
                             </TableCell>
 
-                            <TableCell className="px-4 py-3 text-left text-sm">
+                            <TableCell className="px-4 py-2 text-left text-sm">
                                 {movement.user?.name ?? 'System'}
                             </TableCell>
 
-                            <TableCell className="px-4 py-3 text-right text-sm text-muted-foreground">
+                            <TableCell className="px-4 py-2 text-right text-sm text-muted-foreground">
                                 <time
                                     dateTime={movement.created_at}
                                     className="tabular-nums"

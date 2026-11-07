@@ -10,7 +10,6 @@ import ProductFormDrawer from '@/components/products/product-form-drawer';
 import ProductRowActions from '@/components/products/product-row-actions';
 import ProductStatusBadge from '@/components/products/product-status-badge';
 import ProductThumbnail from '@/components/products/product-thumbnail';
-import StockStatusBadge from '@/components/products/status-badge';
 import { Button } from '@/components/ui/button';
 import Currency from '@/components/ui/currency';
 import {
@@ -190,16 +189,16 @@ const Index = ({
                                 Product
                             </TableHead>
                             <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
+                                Unit Price
+                            </TableHead>
+                            <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
                                 Category
                             </TableHead>
                             <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
                                 Supplier
                             </TableHead>
                             <TableHead className="h-9 px-4 text-right text-xs font-medium text-muted-foreground">
-                                Stock
-                            </TableHead>
-                            <TableHead className="h-9 px-4 text-right text-xs font-medium text-muted-foreground">
-                                Price
+                                Quantity
                             </TableHead>
                             <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
                                 Status
@@ -213,7 +212,7 @@ const Index = ({
                     <TableBody>
                         {products.data.map((product) => (
                             <TableRow key={product.id} className="align-middle">
-                                <TableCell className="px-4 py-3 text-left">
+                                <TableCell className="px-4 py-2 text-left">
                                     <div className="flex items-center gap-3">
                                         <ProductThumbnail
                                             product={product}
@@ -221,7 +220,7 @@ const Index = ({
                                         />
 
                                         <div className="min-w-0">
-                                            <div className="max-w-[16rem] truncate font-medium">
+                                            <div className="max-w-[12rem] truncate font-medium">
                                                 {product.name}
                                             </div>
                                             <div className="mt-0.5 text-xs text-muted-foreground">
@@ -231,32 +230,27 @@ const Index = ({
                                     </div>
                                 </TableCell>
 
-                                <TableCell className="px-4 py-3 text-left text-sm">
-                                    {product.category?.name ?? '—'}
-                                </TableCell>
-
-                                <TableCell className="px-4 py-3 text-left text-sm">
-                                    {product.supplier?.name ?? '—'}
-                                </TableCell>
-
-                                <TableCell className="px-4 py-3 text-right">
-                                    <div className="flex flex-col items-end gap-1">
-                                        <span className="font-medium tabular-nums">
-                                            {product.in_stock}
-                                        </span>
-                                        <StockStatusBadge status={product.stock_status} />
-                                    </div>
-                                </TableCell>
-
-                                <TableCell className="px-4 py-3 text-right font-medium">
+                                <TableCell className="px-4 py-2 text-left font-medium">
                                     <Currency value={product.unit_price} />
                                 </TableCell>
 
-                                <TableCell className="px-4 py-3 text-left">
+                                <TableCell className="px-4 py-2 text-left text-sm">
+                                    {product.category?.name ?? '—'}
+                                </TableCell>
+
+                                <TableCell className="px-4 py-2 text-left text-sm">
+                                    {product.supplier?.name ?? '—'}
+                                </TableCell>
+
+                                <TableCell className="px-4 py-2 text-right font-medium tabular-nums">
+                                    {product.in_stock}
+                                </TableCell>
+
+                                <TableCell className="px-4 py-2 text-left">
                                     <ProductStatusBadge status={product.status} />
                                 </TableCell>
 
-                                <TableCell className="px-4 py-3 text-right">
+                                <TableCell className="px-4 py-2 text-right">
                                     <div className="flex justify-end">
                                         <ProductRowActions product={product} onEdit={openEdit} />
                                     </div>

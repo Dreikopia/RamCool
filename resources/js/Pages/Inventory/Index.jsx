@@ -8,7 +8,6 @@ import { FilterTabs } from '@/components/filters/filter-tabs';
 import { SearchInput } from '@/components/filters/search-input';
 import { DataTableCard } from '@/components/data-table-card';
 import { ListEmptyState } from '@/components/list-empty-state';
-import ProductStatusBadge from '@/components/products/product-status-badge';
 import StockStatusBadge from '@/components/products/status-badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -168,7 +167,7 @@ const Index = ({
                                 Status
                             </TableHead>
                             <TableHead className="h-9 px-4 text-right text-xs font-medium text-muted-foreground">
-                                Action
+                                Actions
                             </TableHead>
                         </TableRow>
                     </TableHeader>
@@ -176,33 +175,32 @@ const Index = ({
                     <TableBody>
                         {inventories.data.map(({ id, product, quantity }) => (
                             <TableRow key={id} className="align-middle">
-                                <TableCell className="max-w-[18rem] px-4 py-3 text-left">
+                                <TableCell className="max-w-[18rem] px-4 py-2 text-left">
                                     <div className="truncate font-medium">{product.name}</div>
                                     <div className="mt-0.5 text-xs text-muted-foreground">
                                         {product.sku}
                                     </div>
                                 </TableCell>
 
-                                <TableCell className="px-4 py-3 text-right font-medium tabular-nums">
+                                <TableCell className="px-4 py-2 text-right font-medium tabular-nums">
                                     {quantity}
                                 </TableCell>
 
-                                <TableCell className="px-4 py-3 text-left text-sm">
+                                <TableCell className="px-4 py-2 text-left text-sm">
                                     {product.category.name}
                                 </TableCell>
 
-                                <TableCell className="px-4 py-3 text-right text-sm tabular-nums text-muted-foreground">
+                                <TableCell className="px-4 py-2 text-right text-sm tabular-nums text-muted-foreground">
                                     {product.reorder_level}
                                 </TableCell>
 
-                                <TableCell className="px-4 py-3 text-left">
+                                <TableCell className="px-4 py-2 text-left">
                                     <div className="flex flex-wrap items-center gap-1">
-                                        <ProductStatusBadge status={product.status} />
                                         <StockStatusBadge status={product.stock_status} />
                                     </div>
                                 </TableCell>
 
-                                <TableCell className="px-4 py-3 text-right">
+                                <TableCell className="px-4 py-2 text-right">
                                     <Button
                                         variant="ghost"
                                         size="icon-sm"

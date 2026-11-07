@@ -135,23 +135,23 @@ const Index = ({
                     <TableBody>
                         {suppliers.data.map((supplier) => (
                             <TableRow key={supplier.id} className="align-middle">
-                                <TableCell className="px-4 py-3 text-left font-medium">
+                                <TableCell className="px-4 py-2 text-left font-medium">
                                     {supplier.name}
                                 </TableCell>
 
-                                <TableCell className="px-4 py-3 text-left text-sm">
+                                <TableCell className="px-4 py-2 text-left text-sm">
                                     {supplier.contact_person ?? '—'}
                                 </TableCell>
 
-                                <TableCell className="px-4 py-3 text-left text-sm tabular-nums">
+                                <TableCell className="px-4 py-2 text-left text-sm tabular-nums">
                                     {supplier.phone ?? '—'}
                                 </TableCell>
 
-                                <TableCell className="px-4 py-3 text-left text-sm">
+                                <TableCell className="px-4 py-2 text-left text-sm">
                                     {supplier.email ?? '—'}
                                 </TableCell>
 
-                                <TableCell className="px-4 py-3 text-left">
+                                <TableCell className="px-4 py-2 text-left">
                                     <Badge
                                         variant="outline"
                                         className={
@@ -164,7 +164,7 @@ const Index = ({
                                     </Badge>
                                 </TableCell>
 
-                                <TableCell className="px-4 py-3 text-right">
+                                <TableCell className="px-4 py-2 text-right">
                                     <div className="flex justify-end gap-2">
                                         <Button
                                             variant="outline"

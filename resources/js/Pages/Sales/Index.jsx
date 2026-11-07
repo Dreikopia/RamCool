@@ -199,11 +199,11 @@ const Index = ({
                             <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
                                 By
                             </TableHead>
-                            <TableHead className="h-9 px-4 text-center text-xs font-medium text-muted-foreground">
+                            <TableHead className="h-9 px-4 text-right text-xs font-medium text-muted-foreground">
                                 Date
                             </TableHead>
                             <TableHead className="h-9 px-4 text-right text-xs font-medium text-muted-foreground">
-                                Action
+                                Actions
                             </TableHead>
                         </TableRow>
                     </TableHeader>
@@ -218,27 +218,27 @@ const Index = ({
                                         : 'align-middle'
                                 }
                             >
-                                <TableCell className="px-4 py-3 text-left font-medium tabular-nums">
+                                <TableCell className="px-4 py-2 text-left font-medium tabular-nums">
                                     {sale.sales_number}
                                 </TableCell>
 
-                                <TableCell className="px-4 py-3 text-right tabular-nums">
+                                <TableCell className="px-4 py-2 text-right tabular-nums">
                                     {sale.items_count}
                                 </TableCell>
 
-                                <TableCell className="px-4 py-3 text-right font-medium">
+                                <TableCell className="px-4 py-2 text-right font-medium">
                                     {formatCurrency(sale.total_amount)}
                                 </TableCell>
 
-                                <TableCell className="px-4 py-3 text-left">
+                                <TableCell className="px-4 py-2 text-left">
                                     <SaleStatusBadge status={sale.status} />
                                 </TableCell>
 
-                                <TableCell className="px-4 py-3 text-left text-sm">
+                                <TableCell className="px-4 py-2 text-left text-sm">
                                     {sale.user?.name ?? '—'}
                                 </TableCell>
 
-                                <TableCell className="px-4 py-3 text-right text-sm text-muted-foreground">
+                                <TableCell className="px-4 py-2 text-right text-sm text-muted-foreground">
                                     <time
                                         dateTime={sale.created_at}
                                         className="tabular-nums"
@@ -250,7 +250,7 @@ const Index = ({
                                     </time>
                                 </TableCell>
 
-                                <TableCell className="px-4 py-3 text-right">
+                                <TableCell className="px-4 py-2 text-right">
                                     <Button
                                         size="xs"
                                         variant="outline"
