@@ -3,7 +3,11 @@
 namespace App\Providers;
 
 use App\Http\Requests\Auth\LoginRequest as AppLoginRequest;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Laravel\Fortify\Contracts\LockoutResponse as LockoutResponseContract;
 use Laravel\Fortify\Fortify;
@@ -60,5 +64,21 @@ class FortifyServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Fortify::loginView(fn () => Inertia::render('Auth/Login'));
+
+        Fortify::authenticateUsing(function (Request $request) {
+            $user = User::where('email', $request->input(Fortify::username()))->first();
+
+            if (! $user || ! $user->password || ! Hash::check($request->password, $user->password)) {
+                return null;
+            }
+
+            if (! $user->isActive()) {
+                throw ValidationException::withMessages([
+                    Fortify::username() => 'Your account is not active. Please contact an administrator.',
+                ]);
+            }
+
+            return $user;
+        });
     }
 }

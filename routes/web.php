@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActivateAccountController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InventoryController;
@@ -10,7 +11,14 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('auth')->group(function () {
+Route::middleware('signed')->group(function () {
+    Route::get('/activate/{user}', [ActivateAccountController::class, 'show'])
+        ->name('account.activate.show');
+    Route::post('/activate/{user}', [ActivateAccountController::class, 'store'])
+        ->name('account.activate.store');
+});
+
+Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/products', [ProductController::class, 'index'])->name('products');
@@ -39,5 +47,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/sales', [SaleController::class, 'store'])->name('sales.store');
     Route::patch('/sales/{sale}/void', [SaleController::class, 'void'])->name('sales.void');
 
-    Route::get('/users', [UserController::class, 'index'])->name('users');
+    Route::middleware('admin')->group(function () {
+        Route::get('/users', [UserController::class, 'index'])->name('users');
+        Route::post('/users', [UserController::class, 'store'])->name('users.store');
+    });
 });

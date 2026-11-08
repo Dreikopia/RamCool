@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\UserStatus;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -34,6 +35,57 @@ it('rejects invalid credentials', function () {
 it('requires an email and a password', function () {
     $this->post(route('login.store'), [])
         ->assertSessionHasErrors(['email', 'password']);
+
+    $this->assertGuest();
+});
+
+it('rejects pending users', function () {
+    User::factory()->pending()->create(['email' => 'pending@example.com']);
+
+    $this->post(route('login.store'), [
+        'email' => 'pending@example.com',
+        'password' => 'password',
+    ])->assertSessionHasErrors([
+        'email' => 'Your account is not active. Please contact an administrator.',
+    ]);
+
+    $this->assertGuest();
+});
+
+it('rejects disabled users', function () {
+    User::factory()->disabled()->create(['email' => 'disabled@example.com']);
+
+    $this->post(route('login.store'), [
+        'email' => 'disabled@example.com',
+        'password' => 'password',
+    ])->assertSessionHasErrors('email');
+
+    $this->assertGuest();
+});
+
+it('rejects users without a password', function () {
+    User::factory()->pending()->create(['email' => 'no-password@example.com', 'password' => null]);
+
+    $this->post(route('login.store'), [
+        'email' => 'no-password@example.com',
+        'password' => 'password',
+    ])->assertSessionHasErrors('email');
+
+    $this->assertGuest();
+});
+
+it('logs out a user whose account becomes inactive', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->get(route('dashboard'))
+        ->assertOk();
+
+    $user->update(['status' => UserStatus::DISABLED]);
+
+    $this->get(route('dashboard'))
+        ->assertRedirect(route('login'))
+        ->assertSessionHasErrors('email');
 
     $this->assertGuest();
 });

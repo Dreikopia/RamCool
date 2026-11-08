@@ -63,7 +63,8 @@ const isActivePath = (currentPath, href) =>
     href === '/' ? currentPath === '/' : currentPath.startsWith(href);
 
 const AppSidebar = ({ ...props }) => {
-    const { url } = usePage();
+    const { url, props: pageProps } = usePage();
+    const isAdmin = pageProps.auth?.user?.role === 'admin';
 
     return (
         <Sidebar collapsible="icon" {...props}>
@@ -80,7 +81,7 @@ const AppSidebar = ({ ...props }) => {
             </SidebarHeader>
 
             <SidebarContent>
-                {navGroups.map((group) => (
+                {navGroups.filter((group) => group.label !== 'Administration' || isAdmin).map((group) => (
                     <SidebarGroup key={group.label}>
                         <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
                         <SidebarGroupContent>
