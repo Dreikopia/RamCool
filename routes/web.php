@@ -7,6 +7,7 @@ use App\Http\Controllers\InventoryMovementController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function () {
@@ -36,7 +37,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/sales', [SaleController::class, 'index'])->name('sales');
     Route::get('/sales/create', [SaleController::class, 'create'])->name('sales.create');
     Route::post('/sales', [SaleController::class, 'store'])->name('sales.store');
-
     Route::patch('/sales/{sale}/void', [SaleController::class, 'void'])->name('sales.void');
 
+    Route::get('/users', [UserController::class, 'index'])->name('users');
 });

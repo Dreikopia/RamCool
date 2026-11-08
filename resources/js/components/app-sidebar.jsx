@@ -1,5 +1,5 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import { ArrowLeftRight, Boxes, LayoutDashboard, LogOutIcon, Package, Settings, ShoppingCart, Tag, TruckIcon, Wind } from 'lucide-react';
+import { ArrowLeftRight, Boxes, LayoutDashboard, LogOutIcon, Package, Settings, ShoppingCart, Tag, TruckIcon, User, Wind } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
     Sidebar,
@@ -44,12 +44,17 @@ const navGroups = [
 
         ],
     },
-
     {
         label: 'Management',
         items: [
             { title: 'Inventory', href: '/inventories', icon: Boxes },
             { title: 'Movements', href: '/movements', icon: ArrowLeftRight },
+        ],
+    },
+    {
+        label: 'Administration',
+        items: [
+            { title: 'Users', href: '/users', icon: User },
         ],
     },
 ];
