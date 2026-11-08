@@ -29,8 +29,22 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'user' => Role::class,
+            'role' => Role::class,
         ];
+    }
+
+    protected $attributes = [
+        'role' => 'staff',
+    ];
+
+    public function isAdmin()
+    {
+        return $this->role === Role::ADMIN;
+    }
+
+    public function isStaff()
+    {
+        return $this->role === Role::STAFF;
     }
 
     public function products()
