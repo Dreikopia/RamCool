@@ -4,6 +4,8 @@ import { FilterTabs } from '@/components/filters/filter-tabs';
 import { SearchInput } from '@/components/filters/search-input';
 import { ListEmptyState } from '@/components/list-empty-state';
 import UserStatusBadge from '@/components/users/user-status-badge';
+import UserFormModal from '@/components/users/user-form-modal';
+import { Button } from '@/components/ui/button';
 import {
     Table,
     TableBody,
@@ -13,6 +15,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { useFilters } from '@/hooks/use-filters';
+import { useState } from 'react';
 
 const STATUS_OPTIONS = [
     { value: 'all', label: 'All' },
@@ -34,6 +37,8 @@ const Index = ({
     users = { data: [], links: [], total: 0 },
     filters: initialFilters,
 }) => {
+    const [createOpen, setCreateOpen] = useState(false);
+
     const { filters, setFilter, clearAll, isPending } = useFilters({
         initialFilters,
         defaults: DEFAULT_FILTERS,
@@ -61,12 +66,17 @@ const Index = ({
                     ariaLabel="Filter users by status"
                     className="min-w-0"
                 />
+
+                <Button onClick={() => setCreateOpen(true)} variant="secondary" size="sm">
+                    Add user
+                </Button>
             </div>
         </div>
     );
 
     return (
-        <DataTableCard
+        <>
+            <DataTableCard
             toolbar={toolbar}
             isEmpty={users.data.length === 0}
             isPending={isPending}
@@ -84,6 +94,8 @@ const Index = ({
                     <ListEmptyState
                         title="No users yet."
                         description="Create a user to give someone access."
+                        actionLabel="Add your first user"
+                        onAction={() => setCreateOpen(true)}
                     />
                 )
             }
@@ -118,6 +130,9 @@ const Index = ({
                 </TableBody>
             </Table>
         </DataTableCard>
+
+            <UserFormModal open={createOpen} onOpenChange={setCreateOpen} />
+        </>
     );
 };
 

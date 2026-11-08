@@ -3,8 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Enums\UserStatus;
+use App\Http\Requests\StoreUserRequest;
 use App\Models\User;
+use App\Notifications\ActivateAccountNotification;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -37,5 +41,21 @@ class UserController extends Controller
                 'status' => $status,
             ],
         ]);
+    }
+
+    public function store(StoreUserRequest $request): RedirectResponse
+    {
+        $user = DB::transaction(function () use ($request) {
+            $user = User::create([
+                ...$request->validated(),
+                'status' => UserStatus::PENDING,
+            ]);
+
+            $user->notify(new ActivateAccountNotification);
+
+            return $user;
+        });
+
+        return back()->with('success', "Activation email sent to {$user->email}.");
     }
 }

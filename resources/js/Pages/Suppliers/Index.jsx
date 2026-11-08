@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { usePage } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { DataTableCard } from '@/components/data-table-card';
 import { FilterTabs } from '@/components/filters/filter-tabs';
@@ -34,6 +35,8 @@ const Index = ({
     suppliers = { data: [], links: [], total: 0 },
     filters: initialFilters,
 }) => {
+    const canManage = usePage().props.auth?.can?.manageCatalog ?? false;
+
     const [dialogOpen, setDialogOpen] = useState(false);
     const [selectedSupplier, setSelectedSupplier] = useState(null);
 
@@ -75,9 +78,11 @@ const Index = ({
                     className="min-w-0"
                 />
 
-                <Button onClick={openCreate} variant="secondary" size="sm">
-                    Add supplier
-                </Button>
+                {canManage && (
+                    <Button onClick={openCreate} variant="secondary" size="sm">
+                        Add supplier
+                    </Button>
+                )}
             </div>
         </div>
     );
@@ -102,8 +107,8 @@ const Index = ({
                         <ListEmptyState
                             title="No suppliers yet."
                             description="Add a supplier to link products to where they came from."
-                            actionLabel="Add your first supplier"
-                            onAction={openCreate}
+                            actionLabel={canManage ? 'Add your first supplier' : undefined}
+                            onAction={canManage ? openCreate : undefined}
                         />
                     )
                 }
@@ -126,9 +131,11 @@ const Index = ({
                             <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
                                 Status
                             </TableHead>
-                            <TableHead className="h-9 px-4 text-right text-xs font-medium text-muted-foreground">
-                                Actions
-                            </TableHead>
+                            {canManage && (
+                                <TableHead className="h-9 px-4 text-right text-xs font-medium text-muted-foreground">
+                                    Actions
+                                </TableHead>
+                            )}
                         </TableRow>
                     </TableHeader>
 
@@ -164,17 +171,19 @@ const Index = ({
                                     </Badge>
                                 </TableCell>
 
-                                <TableCell className="px-4 py-2 text-right">
-                                    <div className="flex justify-end gap-2">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => openEdit(supplier)}
-                                        >
-                                            Edit
-                                        </Button>
-                                    </div>
-                                </TableCell>
+                                {canManage && (
+                                    <TableCell className="px-4 py-2 text-right">
+                                        <div className="flex justify-end gap-2">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => openEdit(supplier)}
+                                            >
+                                                Edit
+                                            </Button>
+                                        </div>
+                                    </TableCell>
+                                )}
                             </TableRow>
                         ))}
                     </TableBody>

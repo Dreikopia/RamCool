@@ -45,6 +45,8 @@ class CategoryController extends Controller
 
     public function store(StoreCategoryRequest $request): RedirectResponse
     {
+        $this->authorize('create', Category::class);
+
         Category::create($request->validated());
 
         return redirect()
@@ -54,6 +56,8 @@ class CategoryController extends Controller
 
     public function update(UpdateCategoryRequest $request, Category $category): RedirectResponse
     {
+        $this->authorize('update', $category);
+
         $category->update($request->validated());
 
         return redirect()
@@ -70,6 +74,8 @@ class CategoryController extends Controller
      */
     public function destroy(Category $category): RedirectResponse
     {
+        $this->authorize('delete', $category);
+
         $productCount = $category->products()->count();
 
         if ($productCount > 0) {

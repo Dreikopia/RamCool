@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Product;
+use App\Models\Sale;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -37,6 +39,14 @@ class HandleInertiaRequests extends Middleware
     {
         return [
             ...parent::share($request),
+
+            'auth' => [
+                'user' => fn () => $request->user()?->only(['id', 'name', 'role']),
+                'can' => fn () => [
+                    'manageCatalog' => $request->user()?->can('create', Product::class) ?? false,
+                    'voidSales' => $request->user()?->can('void', Sale::class) ?? false,
+                ],
+            ],
 
             'flash' => [
                 'retry_after' => fn () => $request->session()->get('retry_after'),
