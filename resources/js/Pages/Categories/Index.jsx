@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { usePage } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import CategoryDeleteDialog from '@/components/categories/category-delete-dialog';
 import CategoryFormModal from '@/components/categories/category-form-modal';
@@ -36,6 +37,8 @@ const Index = ({
     categories = { data: [], links: [], total: 0 },
     filters: initialFilters,
 }) => {
+    const canManage = usePage().props.auth?.can?.manageCatalog ?? false;
+
     const [modal, setModal] = useState({ open: false, category: null });
     const [deleting, setDeleting] = useState(null);
 
@@ -70,9 +73,11 @@ const Index = ({
                     className="min-w-0"
                 />
 
-                <Button onClick={openCreate} variant="secondary" size="sm">
-                    Add category
-                </Button>
+                {canManage && (
+                    <Button onClick={openCreate} variant="secondary" size="sm">
+                        Add category
+                    </Button>
+                )}
             </div>
         </div>
     );
@@ -97,8 +102,8 @@ const Index = ({
                         <ListEmptyState
                             title="No categories yet."
                             description="Add a category to organize your products."
-                            actionLabel="Add your first category"
-                            onAction={openCreate}
+                            actionLabel={canManage ? 'Add your first category' : undefined}
+                            onAction={canManage ? openCreate : undefined}
                         />
                     )
                 }
@@ -115,9 +120,11 @@ const Index = ({
                             <TableHead className="h-9 px-4 text-right text-xs font-medium text-muted-foreground">
                                 Products
                             </TableHead>
-                            <TableHead className="h-9 px-4 text-right text-xs font-medium text-muted-foreground">
-                                Actions
-                            </TableHead>
+                            {canManage && (
+                                <TableHead className="h-9 px-4 text-right text-xs font-medium text-muted-foreground">
+                                    Actions
+                                </TableHead>
+                            )}
                         </TableRow>
                     </TableHeader>
 
@@ -138,15 +145,17 @@ const Index = ({
                                     </Badge>
                                 </TableCell>
 
-                                <TableCell className="px-4 py-2 text-right">
-                                    <div className="flex justify-end">
-                                        <CategoryRowActions
-                                            category={category}
-                                            onEdit={openEdit}
-                                            onDelete={setDeleting}
-                                        />
-                                    </div>
-                                </TableCell>
+                                {canManage && (
+                                    <TableCell className="px-4 py-2 text-right">
+                                        <div className="flex justify-end">
+                                            <CategoryRowActions
+                                                category={category}
+                                                onEdit={openEdit}
+                                                onDelete={setDeleting}
+                                            />
+                                        </div>
+                                    </TableCell>
+                                )}
                             </TableRow>
                         ))}
                     </TableBody>

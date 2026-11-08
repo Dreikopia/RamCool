@@ -44,6 +44,8 @@ class SupplierController extends Controller
 
     public function store(SupplierRequest $request)
     {
+        $this->authorize('create', Supplier::class);
+
         $validated = $request->validated();
 
         Supplier::create($validated);
@@ -53,18 +55,12 @@ class SupplierController extends Controller
 
     public function update(SupplierRequest $request, Supplier $supplier)
     {
+        $this->authorize('update', $supplier);
 
         $validated = $request->validated();
 
         $supplier->update($validated);
 
         return redirect()->route('suppliers')->with('success', 'Supplier has been updated');
-    }
-
-    public function destroy(Supplier $supplier)
-    {
-        $supplier->delete();
-
-        return redirect()->route('suppliers')->with('success', 'Supplier deleted updated');
     }
 }

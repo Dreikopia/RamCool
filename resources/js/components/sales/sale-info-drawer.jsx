@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useForm } from '@inertiajs/react';
+import { useForm, usePage } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/components/ui/currency';
@@ -35,6 +35,7 @@ const formatDate = (value) =>
         : '—';
 
 const SaleInfoDrawer = ({ open, onOpenChange, sale }) => {
+    const canVoid = usePage().props.auth?.can?.voidSales ?? false;
     const [confirmingVoid, setConfirmingVoid] = useState(false);
 
     const { patch, processing, errors, clearErrors } = useForm({});
@@ -181,7 +182,7 @@ const SaleInfoDrawer = ({ open, onOpenChange, sale }) => {
                             Close
                         </Button>
 
-                        {isCompleted && (
+                        {isCompleted && canVoid && (
                             <Button
                                 type="button"
                                 variant="destructive"

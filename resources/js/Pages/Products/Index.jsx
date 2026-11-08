@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { usePage } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { DataTableCard } from '@/components/data-table-card';
 import { CheckboxListFilter } from '@/components/filters/checkbox-list-filter';
@@ -43,6 +44,8 @@ const Index = ({
     suppliers = [],
     filters: initialFilters,
 }) => {
+    const canManage = usePage().props.auth?.can?.manageCatalog ?? false;
+
     const [drawer, setDrawer] = useState({ open: false, product: null });
 
     const { filters, setFilter, removeFilters, clearAll, isPending } = useFilters({
@@ -149,9 +152,11 @@ const Index = ({
                     className="min-w-0"
                 />
 
-                <Button onClick={openCreate} size="sm">
-                    New product
-                </Button>
+                {canManage && (
+                    <Button onClick={openCreate} size="sm">
+                        New product
+                    </Button>
+                )}
             </div>
         </div>
     );
@@ -176,8 +181,8 @@ const Index = ({
                         <ListEmptyState
                             title="No products yet."
                             description="Add your first product to start tracking inventory."
-                            actionLabel="Add your first product"
-                            onAction={openCreate}
+                            actionLabel={canManage ? 'Add your first product' : undefined}
+                            onAction={canManage ? openCreate : undefined}
                         />
                     )
                 }
@@ -203,9 +208,11 @@ const Index = ({
                             <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
                                 Status
                             </TableHead>
-                            <TableHead className="h-9 px-4 text-right text-xs font-medium text-muted-foreground">
-                                Actions
-                            </TableHead>
+                            {canManage && (
+                                <TableHead className="h-9 px-4 text-right text-xs font-medium text-muted-foreground">
+                                    Actions
+                                </TableHead>
+                            )}
                         </TableRow>
                     </TableHeader>
 
@@ -250,11 +257,13 @@ const Index = ({
                                     <ProductStatusBadge status={product.status} />
                                 </TableCell>
 
-                                <TableCell className="px-4 py-2 text-right">
-                                    <div className="flex justify-end">
-                                        <ProductRowActions product={product} onEdit={openEdit} />
-                                    </div>
-                                </TableCell>
+                                {canManage && (
+                                    <TableCell className="px-4 py-2 text-right">
+                                        <div className="flex justify-end">
+                                            <ProductRowActions product={product} onEdit={openEdit} />
+                                        </div>
+                                    </TableCell>
+                                )}
                             </TableRow>
                         ))}
                     </TableBody>

@@ -2,6 +2,7 @@
 
 use App\Enums\MovementType;
 use App\Enums\ProductStatus;
+use App\Enums\Role;
 use App\Enums\SaleStatus;
 use App\Models\Inventory;
 use App\Models\Product;
@@ -12,7 +13,7 @@ use Illuminate\Validation\ValidationException;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
-    $this->user = User::factory()->create();
+    $this->user = User::factory()->create(['role' => Role::ADMIN]);
     $this->actingAs($this->user);
 });
 

@@ -122,6 +122,8 @@ class SaleController extends Controller
 
     public function void(Request $request, Sale $sale)
     {
+        $this->authorize('void', $sale);
+
         $sale = $this->saleService->voidSale(
             $sale,
             $request->user()->id,

@@ -70,6 +70,8 @@ class ProductController extends Controller
 
     public function store(StoreProductRequest $request)
     {
+        $this->authorize('create', Product::class);
+
         $validated = $request->validated();
 
         if ($request->hasFile('image')) {
@@ -90,6 +92,8 @@ class ProductController extends Controller
      */
     public function update(UpdateProductRequest $request, Product $product)
     {
+        $this->authorize('update', $product);
+
         $validated = $request->validated();
 
         $imageProvided = $request->hasFile('image');

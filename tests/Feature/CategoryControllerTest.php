@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Role;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\User;
@@ -7,7 +8,7 @@ use Illuminate\Support\Collection;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
-    $this->actingAs(User::factory()->create());
+    $this->actingAs(User::factory()->create(['role' => Role::ADMIN]));
 });
 
 it('lists categories with product counts and descriptions', function () {
