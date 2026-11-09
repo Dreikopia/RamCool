@@ -3,6 +3,7 @@ import { DataTableCard } from '@/components/data-table-card';
 import { FilterTabs } from '@/components/filters/filter-tabs';
 import { SearchInput } from '@/components/filters/search-input';
 import { ListEmptyState } from '@/components/list-empty-state';
+import { TableFiller } from '@/components/table-filler';
 import UserStatusBadge from '@/components/users/user-status-badge';
 import UserFormModal from '@/components/users/user-form-modal';
 import { Button } from '@/components/ui/button';
@@ -144,6 +145,7 @@ const Index = ({
                                 </TableCell>
                             </TableRow>
                         ))}
+                        <TableFiller rows={8 - users.data.length} cols={5} />
                     </TableBody>
                 </Table>
             </DataTableCard>

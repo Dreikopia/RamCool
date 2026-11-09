@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { usePage } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { DataTableCard } from '@/components/data-table-card';
 import { FilterTabs } from '@/components/filters/filter-tabs';
 import { SearchInput } from '@/components/filters/search-input';
 import { ListEmptyState } from '@/components/list-empty-state';
 import SupplierDialog from '@/components/suppliers/supplier-dialog';
-import { Badge } from '@/components/ui/badge';
+import { TableFiller } from '@/components/table-filler';
+import { StatusIndicator } from '@/components/ui/status-indicator';
 import { Button } from '@/components/ui/button';
 import {
     Table,
@@ -39,6 +40,7 @@ const Index = ({
 
     const [dialogOpen, setDialogOpen] = useState(false);
     const [selectedSupplier, setSelectedSupplier] = useState(null);
+    const [togglingId, setTogglingId] = useState(null);
 
     const { filters, setFilter, clearAll, isPending } = useFilters({
         initialFilters,
@@ -58,6 +60,19 @@ const Index = ({
 
     const hasFilters =
         filters.search.trim() !== '' || filters.status !== 'all';
+
+    const toggleStatus = (supplier) => {
+        router.patch(
+            `/suppliers/${supplier.id}/status`,
+            {},
+            {
+                preserveScroll: true,
+                only: ONLY_PROPS,
+                onStart: () => setTogglingId(supplier.id),
+                onFinish: () => setTogglingId(null),
+            },
+        );
+    };
 
     const toolbar = (
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
@@ -79,8 +94,8 @@ const Index = ({
                 />
 
                 {canManage && (
-                    <Button onClick={openCreate} variant="secondary" size="sm">
-                        Add supplier
+                    <Button onClick={openCreate} size="sm">
+                        New supplier
                     </Button>
                 )}
             </div>
@@ -159,21 +174,23 @@ const Index = ({
                                 </TableCell>
 
                                 <TableCell className="px-4 py-2 text-left">
-                                    <Badge
-                                        variant="outline"
-                                        className={
-                                            supplier.is_active
-                                                ? 'border-transparent bg-sky-500/15 text-sky-700 dark:text-sky-400'
-                                                : 'border-transparent bg-muted text-muted-foreground'
-                                        }
-                                    >
-                                        {supplier.is_active ? 'Active' : 'Inactive'}
-                                    </Badge>
+                                    <StatusIndicator
+                                        tone={supplier.is_active ? 'success' : 'muted'}
+                                        label={supplier.is_active ? 'Active' : 'Inactive'}
+                                    />
                                 </TableCell>
 
                                 {canManage && (
                                     <TableCell className="px-4 py-2 text-right">
                                         <div className="flex justify-end gap-2">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                disabled={togglingId === supplier.id}
+                                                onClick={() => toggleStatus(supplier)}
+                                            >
+                                                {supplier.is_active ? 'Deactivate' : 'Activate'}
+                                            </Button>
                                             <Button
                                                 variant="outline"
                                                 size="sm"
@@ -186,6 +203,10 @@ const Index = ({
                                 )}
                             </TableRow>
                         ))}
+                        <TableFiller
+                            rows={8 - suppliers.data.length}
+                            cols={canManage ? 6 : 5}
+                        />
                     </TableBody>
                 </Table>
             </DataTableCard>

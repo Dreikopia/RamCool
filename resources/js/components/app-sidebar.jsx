@@ -71,9 +71,22 @@ const AppSidebar = ({ ...props }) => {
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" render={<Link href="/" />}>
-                            <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                                <Wind className="size-4" />
+                        <SidebarMenuButton
+                            size="lg"
+                            render={<Link href="/" />}
+                            className="gap-3"
+                        >
+                            <div className="bg-sidebar-primary text-sidebar-primary-foreground flex size-9 shrink-0 items-center justify-center rounded-xl shadow-sm">
+                                <Wind className="size-5" />
+                            </div>
+
+                            <div className="flex flex-col gap-0.5 group-data-[collapsible=icon]:hidden">
+                                <span className="text-base font-bold tracking-wide">
+                                    Aircare
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                    Inventory & Sales Management
+                                </span>
                             </div>
                         </SidebarMenuButton>
                     </SidebarMenuItem>

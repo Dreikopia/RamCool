@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\SupplierRequest;
 use App\Models\Supplier;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -62,5 +63,22 @@ class SupplierController extends Controller
         $supplier->update($validated);
 
         return redirect()->route('suppliers')->with('success', 'Supplier has been updated');
+    }
+
+    /**
+     * Flip a supplier between active and inactive.
+     */
+    public function toggleStatus(Supplier $supplier): RedirectResponse
+    {
+        $this->authorize('update', $supplier);
+
+        $isActive = ! $supplier->is_active;
+
+        $supplier->update(['is_active' => $isActive]);
+
+        return back()->with(
+            'success',
+            $isActive ? 'Supplier activated.' : 'Supplier deactivated.',
+        );
     }
 }

@@ -8,6 +8,7 @@ import { FilterTabs } from '@/components/filters/filter-tabs';
 import { SearchInput } from '@/components/filters/search-input';
 import { ListEmptyState } from '@/components/list-empty-state';
 import MovementTypeBadge from '@/components/movements/movement-type-badge';
+import { TableFiller } from '@/components/table-filler';
 import {
     Table,
     TableBody,
@@ -264,6 +265,7 @@ const Index = ({
                             </TableCell>
                         </TableRow>
                     ))}
+                    <TableFiller rows={8 - movements.data.length} cols={6} />
                 </TableBody>
             </Table>
         </DataTableCard>

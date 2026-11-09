@@ -34,6 +34,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/suppliers', [SupplierController::class, 'index'])->name('suppliers');
     Route::post('/suppliers', [SupplierController::class, 'store'])->name('suppliers.store');
     Route::patch('/suppliers/{supplier}', [SupplierController::class, 'update'])->name('suppliers.update');
+    Route::patch('/suppliers/{supplier}/status', [SupplierController::class, 'toggleStatus'])->name('suppliers.status');
 
     Route::get('/inventories', [InventoryController::class, 'index'])->name('inventories');
 

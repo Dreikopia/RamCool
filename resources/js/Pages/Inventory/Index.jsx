@@ -9,6 +9,7 @@ import { SearchInput } from '@/components/filters/search-input';
 import { DataTableCard } from '@/components/data-table-card';
 import { ListEmptyState } from '@/components/list-empty-state';
 import StockStatusBadge from '@/components/products/status-badge';
+import { TableFiller } from '@/components/table-filler';
 import { Button } from '@/components/ui/button';
 import {
     Table,
@@ -213,6 +214,7 @@ const Index = ({
                                 </TableCell>
                             </TableRow>
                         ))}
+                        <TableFiller rows={8 - inventories.data.length} cols={6} />
                     </TableBody>
                 </Table>
             </DataTableCard>

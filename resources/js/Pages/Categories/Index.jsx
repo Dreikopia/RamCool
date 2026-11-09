@@ -8,6 +8,7 @@ import { DataTableCard } from '@/components/data-table-card';
 import { FilterTabs } from '@/components/filters/filter-tabs';
 import { SearchInput } from '@/components/filters/search-input';
 import { ListEmptyState } from '@/components/list-empty-state';
+import { TableFiller } from '@/components/table-filler';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -74,8 +75,8 @@ const Index = ({
                 />
 
                 {canManage && (
-                    <Button onClick={openCreate} variant="secondary" size="sm">
-                        Add category
+                    <Button onClick={openCreate} size="sm">
+                        New category
                     </Button>
                 )}
             </div>
@@ -158,6 +159,10 @@ const Index = ({
                                 )}
                             </TableRow>
                         ))}
+                        <TableFiller
+                            rows={8 - categories.data.length}
+                            cols={canManage ? 4 : 3}
+                        />
                     </TableBody>
                 </Table>
             </DataTableCard>

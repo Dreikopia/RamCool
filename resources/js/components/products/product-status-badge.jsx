@@ -1,11 +1,10 @@
-import { Badge } from '@/components/ui/badge';
-import { cn } from 'cn';
+import { StatusIndicator } from '@/components/ui/status-indicator';
 
-// Single source of truth for product-status pills. Keyed by the enum value
+// Single source of truth for product-status indicators. Keyed by the enum value
 // (App\Enums\ProductStatus), which the model serializes as a plain string.
-const STYLES = {
-    active: 'border-transparent bg-sky-500/15 text-sky-700 dark:text-sky-400',
-    inactive: 'border-transparent bg-muted text-muted-foreground',
+const TONES = {
+    active: 'success',
+    inactive: 'muted',
 };
 
 const LABELS = {
@@ -19,14 +18,12 @@ const valueOf = (status) =>
 const ProductStatusBadge = ({ status, className }) => {
     const value = valueOf(status);
 
-    if (!value || !STYLES[value]) {
+    if (!value || !TONES[value]) {
         return null;
     }
 
     return (
-        <Badge variant="outline" className={cn(STYLES[value], className)}>
-            {LABELS[value]}
-        </Badge>
+        <StatusIndicator tone={TONES[value]} label={LABELS[value]} className={className} />
     );
 };
 

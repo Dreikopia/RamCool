@@ -34,7 +34,7 @@ class UserController extends Controller
                 ->search($search)
                 ->when($status, fn ($query) => $query->where('status', $status))
                 ->orderBy('name')
-                ->paginate(10)
+                ->paginate(8)
                 ->withQueryString(),
 
             'filters' => [
@@ -60,7 +60,7 @@ class UserController extends Controller
         return back()->with('success', "Activation email sent to {$user->email}.");
     }
 
-    public function update(UpdateUserReUpdaquest $request, User $user)
+    public function update(UpdateUserRequest $request, User $user)
     {
         $user->update($request->validated());
 

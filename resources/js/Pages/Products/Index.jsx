@@ -11,6 +11,7 @@ import ProductFormDrawer from '@/components/products/product-form-drawer';
 import ProductRowActions from '@/components/products/product-row-actions';
 import ProductStatusBadge from '@/components/products/product-status-badge';
 import ProductThumbnail from '@/components/products/product-thumbnail';
+import { TableFiller } from '@/components/table-filler';
 import { Button } from '@/components/ui/button';
 import Currency from '@/components/ui/currency';
 import {
@@ -266,6 +267,10 @@ const Index = ({
                                 )}
                             </TableRow>
                         ))}
+                        <TableFiller
+                            rows={8 - products.data.length}
+                            cols={canManage ? 7 : 6}
+                        />
                     </TableBody>
                 </Table>
             </DataTableCard>

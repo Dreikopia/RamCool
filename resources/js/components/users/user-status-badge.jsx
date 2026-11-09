@@ -1,11 +1,11 @@
-import { Badge } from '@/components/ui/badge';
-import { cn } from 'cn';
+import { StatusIndicator } from '@/components/ui/status-indicator';
 
-
-const STYLES = {
-    active: 'border-transparent bg-emerald-500/15 text-emerald-700 dark:text-emerald-400',
-    pending: 'border-transparent bg-amber-500/15 text-amber-700 dark:text-amber-400',
-    disabled: 'border-transparent bg-muted text-muted-foreground',
+// Status pill replaced by a dot + label. Keyed by the enum value
+// (App\Enums\UserStatus), which the model serializes as { value, label }.
+const TONES = {
+    active: 'success',
+    pending: 'warning',
+    disabled: 'muted',
 };
 
 const LABELS = {
@@ -20,14 +20,12 @@ const valueOf = (status) =>
 const UserStatusBadge = ({ status, className }) => {
     const value = valueOf(status);
 
-    if (!value || !STYLES[value]) {
+    if (!value || !TONES[value]) {
         return null;
     }
 
     return (
-        <Badge variant="outline" className={cn(STYLES[value], className)}>
-            {LABELS[value]}
-        </Badge>
+        <StatusIndicator tone={TONES[value]} label={LABELS[value]} className={className} />
     );
 };
 

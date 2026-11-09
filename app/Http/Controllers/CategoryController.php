@@ -34,7 +34,7 @@ class CategoryController extends Controller
                 ->when($hasProducts === 'empty', fn ($query) => $query->doesntHave('products'))
                 ->orderBy('name')
                 ->orderBy('id')
-                ->paginate(10)
+                ->paginate(8)
                 ->withQueryString(),
             'filters' => [
                 'search' => $search,

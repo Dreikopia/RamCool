@@ -11,6 +11,7 @@ import { SearchInput } from '@/components/filters/search-input';
 import { ListEmptyState } from '@/components/list-empty-state';
 import SaleInfoDrawer from '@/components/sales/sale-info-drawer';
 import SaleStatusBadge from '@/components/sales/sale-status-badge';
+import { TableFiller } from '@/components/table-filler';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/components/ui/currency';
 import {
@@ -261,6 +262,7 @@ const Index = ({
                                 </TableCell>
                             </TableRow>
                         ))}
+                        <TableFiller rows={8 - sales.data.length} cols={7} />
                     </TableBody>
                 </Table>
             </DataTableCard>
