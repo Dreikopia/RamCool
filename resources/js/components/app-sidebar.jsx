@@ -76,7 +76,7 @@ const AppSidebar = ({ ...props }) => {
                             render={<Link href="/" />}
                             className="gap-3"
                         >
-                            <div className="bg-sidebar-primary text-sidebar-primary-foreground flex size-9 shrink-0 items-center justify-center rounded-xl shadow-sm">
+                            <div className="bg-linear-to-br from-sidebar-primary to-purple-800 text-sidebar-primary-foreground flex size-9 shrink-0 items-center justify-center rounded-xl shadow-sm">
                                 <Wind className="size-5" />
                             </div>
 

@@ -29,13 +29,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { formatCurrency } from '@/components/ui/currency';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
+import FilterTabs from '@/components/filters/filter-tabs';
 
 const GRANULARITY_OPTIONS = [
     { value: 'monthly', label: 'Monthly' },
@@ -79,7 +73,7 @@ const RevenueTrend = ({ percent }) => {
     );
 };
 
-const KpiCard = ({ label, value, icon: Icon, tone, support, trend }) => (
+const KpiCard = ({ label, value, icon: Icon, tone, chip, support, trend }) => (
     <Card className="h-full">
         <CardHeader>
             <div className="flex items-center justify-between gap-3">
@@ -88,8 +82,8 @@ const KpiCard = ({ label, value, icon: Icon, tone, support, trend }) => (
                 </CardTitle>
                 <span
                     className={cn(
-                        'flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted',
-                        tone,
+                        'flex size-8 shrink-0 items-center justify-center rounded-lg',
+                        chip ?? 'bg-primary/10 text-primary-text',
                     )}
                 >
                     <Icon className="size-4" aria-hidden="true" />
@@ -160,13 +154,13 @@ const MovementRow = ({ movement }) => {
 };
 
 const RecentMovementsCard = ({ movements }) => (
-    <Card className="flex h-full flex-col lg:col-span-7 p-2">
+    <Card className="flex h-full flex-col lg:col-span-7">
         <CardHeader>
             <CardTitle>Recent movements</CardTitle>
             <CardAction>
                 <Link
                     href="/movements"
-                    className="text-sm font-medium text-primary hover:underline"
+                    className="text-sm font-medium text-primary-text hover:underline"
                 >
                     View all
                 </Link>
@@ -247,6 +241,10 @@ const Index = ({
                 kpis.low_stock_count > 0
                     ? 'text-amber-600 dark:text-amber-400'
                     : '',
+            chip:
+                kpis.low_stock_count > 0
+                    ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                    : undefined,
             support: `${stockShare(kpis.low_stock_count)}% of catalog at or below reorder level`,
         },
         {
@@ -257,6 +255,10 @@ const Index = ({
                 kpis.out_of_stock_count > 0
                     ? 'text-red-600 dark:text-red-400'
                     : '',
+            chip:
+                kpis.out_of_stock_count > 0
+                    ? 'bg-red-500/15 text-red-600 dark:text-red-400'
+                    : undefined,
             support: `${stockShare(kpis.out_of_stock_count)}% of catalog unavailable`,
         },
     ];
@@ -280,29 +282,12 @@ const Index = ({
                     <CardHeader>
                         <CardTitle>Sales performance</CardTitle>
                         <CardAction>
-                            <Select
+                            <FilterTabs
+                                ariaLabel="Sales performance range"
+                                options={GRANULARITY_OPTIONS}
                                 value={granularity}
-                                onValueChange={setGranularity}
-                                items={GRANULARITY_OPTIONS}
-                            >
-                                <SelectTrigger
-                                    size="sm"
-                                    className="w-28"
-                                    aria-label="Sales performance range"
-                                >
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {GRANULARITY_OPTIONS.map((option) => (
-                                        <SelectItem
-                                            key={option.value}
-                                            value={option.value}
-                                        >
-                                            {option.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                                onChange={setGranularity}
+                            />
                         </CardAction>
                     </CardHeader>
                     <CardContent className="flex flex-1 flex-col justify-center">
@@ -332,7 +317,7 @@ const Index = ({
                         <CardAction>
                             <Link
                                 href="/inventories"
-                                className="text-sm font-medium text-primary hover:underline"
+                                className="text-sm font-medium text-primary-text hover:underline"
                             >
                                 View all
                             </Link>

@@ -52,7 +52,7 @@ export function FilterPopover({ fields = [], activeCount = 0, className }) {
 
                 {activeCount > 0 && (
                     <span
-                        className="ml-0.5 inline-flex size-4 items-center justify-center rounded-full bg-blue-600 text-[10px] font-semibold text-white"
+                        className="ml-0.5 inline-flex size-4 items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-semibold"
                         aria-label={`${activeCount} active filters`}
                     >
                         {activeCount}
@@ -81,7 +81,7 @@ export function FilterPopover({ fields = [], activeCount = 0, className }) {
                                     className={cn(
                                         'flex h-8 shrink-0 items-center justify-between gap-2 rounded-md px-2 text-left text-sm whitespace-nowrap transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none sm:w-full',
                                         isActive
-                                            ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400'
+                                            ? 'bg-primary/10 text-primary-text'
                                             : 'text-muted-foreground hover:bg-muted hover:text-foreground',
                                     )}
                                 >
@@ -89,7 +89,7 @@ export function FilterPopover({ fields = [], activeCount = 0, className }) {
 
                                     {field.active && (
                                         <Check
-                                            className="size-3.5 shrink-0 text-blue-600 dark:text-blue-400"
+                                            className="size-3.5 shrink-0 text-primary-text"
                                             aria-hidden="true"
                                         />
                                     )}

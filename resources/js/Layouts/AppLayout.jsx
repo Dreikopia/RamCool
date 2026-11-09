@@ -14,7 +14,7 @@ const AppLayout = ({ children, title }) => {
                     <SidebarInset>
                         <header className="flex h-16 shrink-0 items-center gap-2 border-b border-sidebar-border px-4">
                             <SidebarTrigger className="-ml-1" />
-                            <h1 className="min-w-0 truncate text-base-200 tracking-wide">
+                            <h1 className="min-w-0 truncate text-base font-semibold tracking-tight">
                                 {title}
                             </h1>
                         </header>

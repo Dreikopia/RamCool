@@ -83,13 +83,13 @@ export function CheckboxListFilter({
                                     key={option.value}
                                     className={cn(
                                         'flex cursor-pointer items-start gap-2 rounded-md px-1.5 py-1.5 text-sm transition-colors hover:bg-muted/70',
-                                        checked && 'bg-blue-50/60 dark:bg-blue-500/5',
+                                        checked && 'bg-primary/10',
                                     )}
                                 >
                                     <Checkbox
                                         checked={checked}
                                         onCheckedChange={() => toggle(option.value)}
-                                        className="mt-0.5 data-checked:border-blue-600 data-checked:bg-blue-600 dark:data-checked:bg-blue-600"
+                                        className="mt-0.5 data-checked:border-primary data-checked:bg-primary"
                                     />
 
                                     <span className="min-w-0 flex-1">

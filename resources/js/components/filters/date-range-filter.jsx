@@ -159,7 +159,7 @@ export function DateRangeFilter({ value = {}, onChange, className }) {
                         className={cn(
                             'flex items-center justify-between rounded-md px-2 py-1.5 text-left text-sm transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none',
                             isActive
-                                ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400'
+                                ? 'bg-primary/10 text-primary-text'
                                 : 'text-muted-foreground hover:bg-muted hover:text-foreground',
                         )}
                     >
@@ -175,7 +175,7 @@ export function DateRangeFilter({ value = {}, onChange, className }) {
                 className={cn(
                     'flex items-center justify-between rounded-md px-2 py-1.5 text-left text-sm transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none',
                     mode === 'custom'
-                        ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400'
+                        ? 'bg-primary/10 text-primary-text'
                         : 'text-muted-foreground hover:bg-muted hover:text-foreground',
                 )}
             >

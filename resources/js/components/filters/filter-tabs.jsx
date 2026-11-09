@@ -35,7 +35,7 @@ export function FilterTabs({
                         className={cn(
                             'h-7 shrink-0 rounded-md px-2.5 text-xs font-medium whitespace-nowrap transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none',
                             isActive
-                                ? 'bg-blue-600 text-white shadow-sm dark:bg-blue-600 dark:text-white'
+                                ? 'bg-primary text-primary-foreground shadow-sm'
                                 : 'text-muted-foreground hover:text-foreground',
                         )}
                     >

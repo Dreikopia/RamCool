@@ -6,7 +6,7 @@ import {
 } from '@/components/ui/chart';
 
 const COLORS = [
-    'oklch(0.62 0.19 255)',
+    'oklch(0.541 0.281 293.541)',
     'oklch(0.70 0.14 195)',
     'oklch(0.78 0.15 82)',
     'oklch(0.60 0.20 300)',
