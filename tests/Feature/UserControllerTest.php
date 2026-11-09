@@ -4,7 +4,9 @@ use App\Enums\Role;
 use App\Enums\UserStatus;
 use App\Models\User;
 use App\Notifications\ActivateAccountNotification;
+use Illuminate\Notifications\SendQueuedNotifications;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Queue;
 use Inertia\Testing\AssertableInertia as Assert;
 
 it('lists users with their status', function () {
@@ -72,6 +74,20 @@ it('lets an admin create a pending user and sends an activation email', function
         ->and($user->role)->toBe(Role::STAFF);
 
     Notification::assertSentTo($user, ActivateAccountNotification::class);
+});
+
+it('queues the activation email instead of sending it during the request', function () {
+    Queue::fake();
+
+    $this->actingAs(User::factory()->create(['role' => Role::ADMIN]))
+        ->post(route('users.store'), [
+            'name' => 'New Person',
+            'email' => 'new@example.com',
+            'role' => Role::STAFF->value,
+        ])
+        ->assertRedirect();
+
+    Queue::assertPushed(SendQueuedNotifications::class);
 });
 
 it('forbids staff from creating users', function () {

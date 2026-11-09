@@ -3,23 +3,16 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\URL;
 
-class ActivateAccountNotification extends Notification
+class ActivateAccountNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
     public const EXPIRES_IN_HOURS = 48;
-
-    /**
-     * Create a new notification instance.
-     */
-    public function __construct()
-    {
-        //
-    }
 
     /**
      * Get the notification's delivery channels.

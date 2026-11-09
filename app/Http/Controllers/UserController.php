@@ -51,7 +51,7 @@ class UserController extends Controller
                 'status' => UserStatus::PENDING,
             ]);
 
-            $user->notify(new ActivateAccountNotification);
+            $user->notify((new ActivateAccountNotification)->afterCommit());
 
             return $user;
         });
