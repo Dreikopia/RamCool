@@ -1,5 +1,5 @@
 import { useForm } from '@inertiajs/react';
-import { useEffect, useLayoutEffect } from 'react';
+import { useLayoutEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,26 +22,35 @@ import {
 
 const ROLE_LABELS = { staff: 'Staff', admin: 'Admin' };
 
-const UserFormModal = ({ open, onOpenChange }) => {
-    const { data, setData, post, processing, errors, reset, recentlySuccessful } = useForm({
+const UserFormModal = ({ open, onOpenChange, user = null }) => {
+
+    const isEdit = user !== null;
+
+    const { data, setData, post, patch, processing, errors, clearErrors } = useForm({
         name: '',
         email: '',
         role: 'staff',
     });
 
     useLayoutEffect(() => {
-        reset();
-    }, [open]);
-
-    useEffect(() => {
-        if (recentlySuccessful) {
-            onOpenChange(false);
-        }
-    }, [recentlySuccessful]);
+        setData({
+            name: user?.name ?? '',
+            email: user?.email ?? '',
+            role: user?.role ?? 'staff',
+        });
+        clearErrors();
+    }, [open, user, setData, clearErrors]);
 
     const submit = (e) => {
         e.preventDefault();
-        post('/users');
+
+        const options = { onSuccess: () => onOpenChange(false) };
+
+        if (isEdit) {
+            patch(`/users/${user.id}`, options);
+        } else {
+            post('/users', options);
+        }
     };
 
     return (
@@ -49,9 +58,11 @@ const UserFormModal = ({ open, onOpenChange }) => {
             <DialogContent className="sm:max-w-md">
                 <form onSubmit={submit} className="grid gap-4">
                     <DialogHeader>
-                        <DialogTitle>New user</DialogTitle>
+                        <DialogTitle>{isEdit ? 'Edit user' : 'New user'}</DialogTitle>
                         <DialogDescription>
-                            They will receive an email with a link to set their password.
+                            {isEdit
+                                ? "Update this user's details."
+                                : 'They will receive an email with a link to set their password.'}
                         </DialogDescription>
                     </DialogHeader>
 
@@ -116,7 +127,7 @@ const UserFormModal = ({ open, onOpenChange }) => {
                             }
                         />
                         <Button type="submit" disabled={processing}>
-                            {processing ? 'Creating.' : 'Create user'}
+                            {processing ? 'Saving…' : isEdit ? 'Save changes' : 'Create user'}
                         </Button>
                     </DialogFooter>
                 </form>

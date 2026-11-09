@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Enums\Role;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class StoreUserRequest extends FormRequest
@@ -15,6 +16,16 @@ class StoreUserRequest extends FormRequest
     public function authorize(): bool
     {
         return $this->user()?->isAdmin() ?? false;
+    }
+
+    /**
+     * Normalize the email so case-only duplicates are rejected.
+     */
+    protected function prepareForValidation(): void
+    {
+        if (is_string($email = $this->input('email'))) {
+            $this->merge(['email' => Str::lower($email)]);
+        }
     }
 
     /**

@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Role;
 use App\Enums\UserStatus;
 use App\Http\Requests\StoreUserRequest;
+use App\Http\Requests\UpdateUserRequest;
 use App\Models\User;
 use App\Notifications\ActivateAccountNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -57,5 +60,50 @@ class UserController extends Controller
         });
 
         return back()->with('success', "Activation email sent to {$user->email}.");
+    }
+
+    public function update(UpdateUserRequest $request, User $user): RedirectResponse
+    {
+        $validated = $request->validated();
+        $newRole = Role::from($validated['role']);
+        $emailChanged = $validated['email'] !== $user->email;
+
+        if ($request->user()->is($user) && $newRole !== $user->role) {
+            throw ValidationException::withMessages([
+                'role' => 'You cannot change your own role.',
+            ]);
+        }
+
+        if ($emailChanged) {
+            $validated['email_verified_at'] = null;
+        }
+
+        DB::transaction(function () use ($user, $validated, $newRole): void {
+            if ($user->isAdmin() && $user->isActive() && $newRole !== Role::ADMIN) {
+                $activeAdmins = User::query()
+                    ->where('role', Role::ADMIN)
+                    ->where('status', UserStatus::ACTIVE)
+                    ->lockForUpdate()
+                    ->count();
+
+                if ($activeAdmins <= 1) {
+                    throw ValidationException::withMessages([
+                        'role' => 'You cannot remove the last active admin.',
+                    ]);
+                }
+            }
+
+            $user->forceFill($validated)->save();
+        });
+
+        if ($emailChanged) {
+            match ($user->status) {
+                UserStatus::PENDING => $user->notify((new ActivateAccountNotification)->afterCommit()),
+                UserStatus::ACTIVE => $user->sendEmailVerificationNotification(),
+                default => null,
+            };
+        }
+
+        return back()->with('success', 'User has been updated');
     }
 }

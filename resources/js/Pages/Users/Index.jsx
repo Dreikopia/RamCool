@@ -37,7 +37,18 @@ const Index = ({
     users = { data: [], links: [], total: 0 },
     filters: initialFilters,
 }) => {
-    const [createOpen, setCreateOpen] = useState(false);
+    const [formOpen, setFormOpen] = useState(false);
+    const [editingUser, setEditingUser] = useState(null);
+
+    const openCreate = () => {
+        setEditingUser(null);
+        setFormOpen(true);
+    };
+
+    const openEdit = (user) => {
+        setEditingUser(user);
+        setFormOpen(true);
+    };
 
     const { filters, setFilter, clearAll, isPending } = useFilters({
         initialFilters,
@@ -67,7 +78,7 @@ const Index = ({
                     className="min-w-0"
                 />
 
-                <Button onClick={() => setCreateOpen(true)} variant="secondary" size="sm">
+                <Button onClick={openCreate} size="sm">
                     Add user
                 </Button>
             </div>
@@ -77,61 +88,67 @@ const Index = ({
     return (
         <>
             <DataTableCard
-            toolbar={toolbar}
-            isEmpty={users.data.length === 0}
-            isPending={isPending}
-            paginator={users}
-            only={ONLY_PROPS}
-            itemLabel="users"
-            empty={
-                hasFilters ? (
-                    <ListEmptyState
-                        title="No users match these filters"
-                        actionLabel="Clear filters"
-                        onAction={clearAll}
-                    />
-                ) : (
-                    <ListEmptyState
-                        title="No users yet."
-                        description="Create a user to give someone access."
-                        actionLabel="Add your first user"
-                        onAction={() => setCreateOpen(true)}
-                    />
-                )
-            }
-        >
-            <Table>
-                <TableHeader>
-                    <TableRow className="bg-muted/40 hover:bg-muted/40">
-                        <TableHead className={HEAD}>Name</TableHead>
-                        <TableHead className={HEAD}>Email</TableHead>
-                        <TableHead className={HEAD}>Role</TableHead>
-                        <TableHead className={HEAD}>Status</TableHead>
-                    </TableRow>
-                </TableHeader>
-
-                <TableBody>
-                    {users.data.map((user) => (
-                        <TableRow key={user.id} className="align-middle">
-                            <TableCell className="px-4 py-2 text-left font-medium">
-                                {user.name}
-                            </TableCell>
-                            <TableCell className="px-4 py-2 text-left text-sm text-muted-foreground">
-                                {user.email}
-                            </TableCell>
-                            <TableCell className="px-4 py-2 text-left text-sm capitalize">
-                                {user.role}
-                            </TableCell>
-                            <TableCell className="px-4 py-2 text-left">
-                                <UserStatusBadge status={user.status} />
-                            </TableCell>
+                toolbar={toolbar}
+                isEmpty={users.data.length === 0}
+                isPending={isPending}
+                paginator={users}
+                only={ONLY_PROPS}
+                itemLabel="users"
+                empty={
+                    hasFilters ? (
+                        <ListEmptyState
+                            title="No users match these filters"
+                            actionLabel="Clear filters"
+                            onAction={clearAll}
+                        />
+                    ) : (
+                        <ListEmptyState
+                            title="No users yet."
+                            description="Create a user to give someone access."
+                            actionLabel="Add your first user"
+                            onAction={openCreate}
+                        />
+                    )
+                }
+            >
+                <Table>
+                    <TableHeader>
+                        <TableRow className="bg-muted/40 hover:bg-muted/40">
+                            <TableHead className={HEAD}>Name</TableHead>
+                            <TableHead className={HEAD}>Email</TableHead>
+                            <TableHead className={HEAD}>Role</TableHead>
+                            <TableHead className={HEAD}>Status</TableHead>
+                            <TableHead className={HEAD}>Action</TableHead>
                         </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </DataTableCard>
+                    </TableHeader>
 
-            <UserFormModal open={createOpen} onOpenChange={setCreateOpen} />
+                    <TableBody>
+                        {users.data.map((user) => (
+                            <TableRow key={user.id} className="align-middle">
+                                <TableCell className="px-4 py-2 text-left font-medium">
+                                    {user.name}
+                                </TableCell>
+                                <TableCell className="px-4 py-2 text-left text-sm text-muted-foreground">
+                                    {user.email}
+                                </TableCell>
+                                <TableCell className="px-4 py-2 text-left text-sm capitalize">
+                                    {user.role}
+                                </TableCell>
+                                <TableCell className="px-4 py-2 text-left">
+                                    <UserStatusBadge status={user.status} />
+                                </TableCell>
+                                <TableCell className="px-4 py-2 text-left">
+                                    <Button size="sm" onClick={() => openEdit(user)}>
+                                        Edit
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </DataTableCard>
+
+            <UserFormModal open={formOpen} onOpenChange={setFormOpen} user={editingUser} />
         </>
     );
 };

@@ -50,5 +50,6 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::middleware('admin')->group(function () {
         Route::get('/users', [UserController::class, 'index'])->name('users');
         Route::post('/users', [UserController::class, 'store'])->name('users.store');
+        Route::patch('/users/{user}', [UserController::class, 'update'])->name('users.update');
     });
 });

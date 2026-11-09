@@ -176,6 +176,8 @@ return [
     |
     */
 
-    'features' => [],
+    'features' => [
+        Features::emailVerification(),
+    ],
 
 ];
