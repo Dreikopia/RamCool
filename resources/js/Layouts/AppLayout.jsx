@@ -1,15 +1,10 @@
-import { Moon, Sun } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { ToastProvider } from '@/components/ui/toast';
 import FlashToaster from '@/components/flash-toaster';
-import { useTheme } from '@/hooks/use-theme';
 import AppSidebar from '@/components/app-sidebar';
 
 const AppLayout = ({ children, title }) => {
-    const { resolvedTheme, toggleTheme } = useTheme();
-
     return (
         <ToastProvider>
             <FlashToaster />
@@ -22,16 +17,6 @@ const AppLayout = ({ children, title }) => {
                             <h1 className="min-w-0 truncate text-base font-semibold tracking-tight">
                                 {title}
                             </h1>
-
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="ml-auto"
-                                onClick={toggleTheme}
-                                aria-label="Toggle theme"
-                            >
-                                {resolvedTheme === 'dark' ? <Moon /> : <Sun />}
-                            </Button>
                         </header>
                         <main className="flex flex-1 flex-col gap-4 p-4">{children}</main>
                     </SidebarInset>
