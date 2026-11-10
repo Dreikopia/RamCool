@@ -1,16 +1,21 @@
 import { useEffect, useState } from 'react';
 import { useForm, usePage } from '@inertiajs/react';
 import { format } from 'date-fns';
+import { TriangleAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/components/ui/currency';
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogMedia,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { TableFiller } from '@/components/table-filler';
 import {
     Sheet,
     SheetContent,
@@ -114,17 +119,17 @@ const SaleInfoDrawer = ({ open, onOpenChange, sale }) => {
                         ) : (
                             <Table>
                                 <TableHeader>
-                                    <TableRow>
-                                        <TableHead className="px-0">
+                                    <TableRow className="bg-muted/40 hover:bg-muted/40">
+                                        <TableHead className="h-9 px-0 text-left text-xs font-medium text-muted-foreground">
                                             Product
                                         </TableHead>
-                                        <TableHead className="px-0 text-right">
+                                        <TableHead className="h-9 px-0 text-right text-xs font-medium text-muted-foreground">
                                             Qty
                                         </TableHead>
-                                        <TableHead className="px-0 text-right">
+                                        <TableHead className="h-9 px-0 text-right text-xs font-medium text-muted-foreground">
                                             Price
                                         </TableHead>
-                                        <TableHead className="px-0 text-right">
+                                        <TableHead className="h-9 px-0 text-right text-xs font-medium text-muted-foreground">
                                             Total
                                         </TableHead>
                                     </TableRow>
@@ -132,9 +137,9 @@ const SaleInfoDrawer = ({ open, onOpenChange, sale }) => {
 
                                 <TableBody>
                                     {items.map((item) => (
-                                        <TableRow key={item.id}>
+                                        <TableRow key={item.id} className="align-middle">
                                             <TableCell
-                                                className={`px-0 whitespace-normal ${isVoided
+                                                className={`px-0 py-2 whitespace-normal ${isVoided
                                                     ? 'text-muted-foreground'
                                                     : ''
                                                     }`}
@@ -142,28 +147,32 @@ const SaleInfoDrawer = ({ open, onOpenChange, sale }) => {
                                                 {item.product?.name ??
                                                     'Deleted product'}
                                             </TableCell>
-                                            <TableCell className="px-0 text-right tabular-nums">
+                                            <TableCell className="px-0 py-2 text-right tabular-nums">
                                                 {item.quantity}
                                             </TableCell>
-                                            <TableCell className="px-0 text-right tabular-nums">
+                                            <TableCell className="px-0 py-2 text-right tabular-nums">
                                                 {formatCurrency(item.unit_price)}
                                             </TableCell>
-                                            <TableCell className="px-0 text-right font-medium tabular-nums">
+                                            <TableCell className="px-0 py-2 text-right font-medium tabular-nums">
                                                 {formatCurrency(item.subtotal)}
                                             </TableCell>
                                         </TableRow>
                                     ))}
+                                    <TableFiller
+                                        rows={8 - items.length}
+                                        cols={4}
+                                    />
                                 </TableBody>
 
                                 <TableFooter>
                                     <TableRow>
                                         <TableCell
                                             colSpan={3}
-                                            className="px-0 font-semibold"
+                                            className="px-0 py-2 font-semibold"
                                         >
                                             Total
                                         </TableCell>
-                                        <TableCell className="px-0 text-right font-semibold tabular-nums">
+                                        <TableCell className="px-0 py-2 text-right font-semibold tabular-nums">
                                             {formatCurrency(sale?.total_amount)}
                                         </TableCell>
                                     </TableRow>
@@ -196,42 +205,39 @@ const SaleInfoDrawer = ({ open, onOpenChange, sale }) => {
                 </SheetContent>
             </Sheet>
 
-            <Dialog open={confirmingVoid} onOpenChange={setConfirmingVoid}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>
+            <AlertDialog open={confirmingVoid} onOpenChange={setConfirmingVoid}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogMedia>
+                            <TriangleAlert className="text-destructive" />
+                        </AlertDialogMedia>
+                        <AlertDialogTitle>
                             Void sale {sale?.sales_number}?
-                        </DialogTitle>
-                        <DialogDescription>
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
                             This restores the sold quantities to inventory and
                             cannot be undone.
-                        </DialogDescription>
-                    </DialogHeader>
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
 
                     {errors.void && (
                         <p className="text-sm text-destructive">{errors.void}</p>
                     )}
 
-                    <DialogFooter>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => setConfirmingVoid(false)}
-                            disabled={processing}
-                        >
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={processing}>
                             Cancel
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="destructive"
-                            onClick={submitVoid}
+                        </AlertDialogCancel>
+                        <AlertDialogAction
                             disabled={processing}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90 hover:text-destructive-foreground"
+                            onClick={submitVoid}
                         >
                             {processing ? 'Voiding…' : 'Void sale'}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </>
     );
 };

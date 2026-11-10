@@ -15,10 +15,6 @@ class DashboardService
 {
     private const RECENT_PRODUCT_DAYS = 30;
 
-    private const TREND_MONTHS = 6;
-
-    private const TREND_WEEKS = 8;
-
     private const CATEGORY_LIMIT = 10;
 
     private const MOVEMENTS_PER_PAGE = 10;
@@ -56,55 +52,32 @@ class DashboardService
         ];
     }
 
-    public function salesTrend(): array
+    public function salesTrends(): array
     {
-        $start = now()->startOfMonth()->subMonths(self::TREND_MONTHS - 1);
-
-        $sales = Sale::query()
-            ->where('status', SaleStatus::COMPLETED)
-            ->where('created_at', '>=', $start)
-            ->get(['created_at', 'total_amount']);
-
-        $buckets = [];
-
-        for ($offset = 0; $offset < self::TREND_MONTHS; $offset++) {
-            $month = $start->copy()->addMonths($offset);
-
-            $buckets[$month->format('Y-m')] = [
-                'period' => $month->format('Y-m'),
-                'label' => $month->format('M Y'),
-                'revenue' => 0.0,
-                'orders' => 0,
-            ];
-        }
-
-        foreach ($sales as $sale) {
-            $key = $sale->created_at->format('Y-m');
-
-            if (! isset($buckets[$key])) {
-                continue;
-            }
-
-            $buckets[$key]['revenue'] += (float) $sale->total_amount;
-            $buckets[$key]['orders']++;
-        }
-
-        return array_map(
-            fn (array $bucket): array => [
-                'period' => $bucket['period'],
-                'label' => $bucket['label'],
-                'revenue' => round($bucket['revenue'], 2),
-                'orders' => $bucket['orders'],
-            ],
-            array_values($buckets),
-        );
+        return [
+            'hourly' => $this->trendBuckets('hour', 24),
+            'days7' => $this->trendBuckets('day', 7),
+            'days30' => $this->trendBuckets('day', 30),
+            'months6' => $this->trendBuckets('month', 6),
+        ];
     }
 
-    public function weeklySalesTrend(): array
+    /**
+     * Buckets completed sales into evenly spaced periods for the dashboard
+     * trend chart: [period, label, revenue, orders] per bucket.
+     *
+     * @return array<int, array{period: string, label: string, revenue: float, orders: int}>
+     */
+    private function trendBuckets(string $unit, int $periods): array
     {
-        $start = now()
-            ->startOfWeek(CarbonInterface::MONDAY)
-            ->subWeeks(self::TREND_WEEKS - 1);
+        $formats = [
+            'hour' => ['key' => 'Y-m-d H:00', 'label' => 'g A'],
+            'day' => ['key' => 'Y-m-d', 'label' => 'M j'],
+            'month' => ['key' => 'Y-m', 'label' => 'M Y'],
+        ];
+
+        $format = $formats[$unit];
+        $start = now()->startOf($unit)->sub($unit, $periods - 1);
 
         $sales = Sale::query()
             ->where('status', SaleStatus::COMPLETED)
@@ -113,22 +86,20 @@ class DashboardService
 
         $buckets = [];
 
-        for ($offset = 0; $offset < self::TREND_WEEKS; $offset++) {
-            $week = $start->copy()->addWeeks($offset);
+        for ($offset = 0; $offset < $periods; $offset++) {
+            $period = $start->copy()->add($unit, $offset);
+            $key = $period->format($format['key']);
 
-            $buckets[$week->format('Y-m-d')] = [
-                'period' => $week->format('Y-m-d'),
-                'label' => $week->format('M j'),
+            $buckets[$key] = [
+                'period' => $key,
+                'label' => $period->format($format['label']),
                 'revenue' => 0.0,
                 'orders' => 0,
             ];
         }
 
         foreach ($sales as $sale) {
-            $key = $sale->created_at
-                ->copy()
-                ->startOfWeek(CarbonInterface::MONDAY)
-                ->format('Y-m-d');
+            $key = $sale->created_at->format($format['key']);
 
             if (! isset($buckets[$key])) {
                 continue;

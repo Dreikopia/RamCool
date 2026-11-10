@@ -62,11 +62,23 @@ const buildLine = (points) =>
         return `${path} C ${control1X} ${control1Y}, ${control2X} ${control2Y}, ${point.x} ${point.y}`;
     }, '');
 
+const RANGE_META = {
+    hourly: { summary: 'the last 24 hours', step: 3, text: (label) => label },
+    days7: { summary: 'the last 7 days', step: 1, text: (label) => label },
+    days30: { summary: 'the last 30 days', step: 5, text: (label) => label },
+    months6: {
+        summary: 'the last 6 months',
+        step: 1,
+        text: (label) => label.split(' ')[0],
+    },
+};
+
 const SalesPerformanceChart = ({
     data = [],
-    granularity = 'monthly',
+    granularity = 'months6',
     className,
 }) => {
+    const meta = RANGE_META[granularity] ?? RANGE_META.months6;
     const gradientId = useId();
     const [hovered, setHovered] = useState(null);
 
@@ -100,7 +112,7 @@ const SalesPerformanceChart = ({
                 viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
                 className="h-auto w-full"
                 role="img"
-                aria-label={`Sales performance over the last ${data.length} ${granularity === 'weekly' ? 'weeks' : 'months'}`}
+                aria-label={`Sales performance over ${meta.summary}`}
             >
                 <title>Sales performance</title>
 
@@ -199,19 +211,19 @@ const SalesPerformanceChart = ({
                     </g>
                 ))}
 
-                {points.map((point) => (
-                    <text
-                        key={`label-${point.period}`}
-                        x={point.x}
-                        y={HEIGHT - 9}
-                        textAnchor="middle"
-                        className="fill-muted-foreground text-[11px]"
-                    >
-                        {granularity === 'weekly'
-                            ? point.label
-                            : point.label.split(' ')[0]}
-                    </text>
-                ))}
+                {points.map((point, index) =>
+                    index % meta.step === 0 || index === points.length - 1 ? (
+                        <text
+                            key={`label-${point.period}`}
+                            x={point.x}
+                            y={HEIGHT - 9}
+                            textAnchor="middle"
+                            className="fill-muted-foreground text-[11px]"
+                        >
+                            {meta.text(point.label)}
+                        </text>
+                    ) : null,
+                )}
             </svg>
 
             {hoveredPoint && (
@@ -228,9 +240,7 @@ const SalesPerformanceChart = ({
                     }}
                 >
                     <div className="text-xs text-muted-foreground">
-                        {granularity === 'weekly'
-                            ? `Week of ${hoveredPoint.label}`
-                            : hoveredPoint.label}
+                        {hoveredPoint.label}
                     </div>
                     <div className="font-semibold tabular-nums">
                         {fullCurrency.format(Number(hoveredPoint.revenue))}

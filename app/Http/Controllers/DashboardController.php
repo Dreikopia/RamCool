@@ -14,8 +14,7 @@ class DashboardController extends Controller
         return Inertia::render('Dashboard/Index', [
             'kpis' => $this->dashboard->kpis(),
             'restockItems' => $this->dashboard->restockItems(),
-            'salesTrend' => $this->dashboard->salesTrend(),
-            'weeklySalesTrend' => $this->dashboard->weeklySalesTrend(),
+            'salesTrends' => $this->dashboard->salesTrends(),
             'salesByCategory' => $this->dashboard->salesByCategory(),
             'movements' => $this->dashboard->movements(),
         ]);

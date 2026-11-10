@@ -117,7 +117,7 @@ it('returns six monthly revenue buckets and ignores voided sales', function () {
     backdateSale(makeSale(70.00), '2026-08-15 10:00:00');
     makeSale(999.00, SaleStatus::VOIDED);
 
-    $trend = $this->service->salesTrend();
+    $trend = $this->service->salesTrends()['months6'];
 
     expect($trend)->toHaveCount(6)
         ->and($trend[0]['period'])->toBe('2026-06')
@@ -130,23 +130,32 @@ it('returns six monthly revenue buckets and ignores voided sales', function () {
         ->and($trend[5]['orders'])->toBe(1);
 });
 
-it('returns eight weekly revenue buckets using Monday week starts', function () {
-    $this->travelTo('2026-11-15 12:00:00');
+it('buckets sales by hour, day and month for every chart range', function () {
+    $this->travelTo('2026-11-10 14:30:00');
 
-    backdateSale(makeSale(40.00), '2026-11-10 10:00:00');
-    backdateSale(makeSale(25.00), '2026-11-02 10:00:00');
+    backdateSale(makeSale(40.00), '2026-11-10 09:15:00');
+    backdateSale(makeSale(25.00), '2026-11-08 10:00:00');
+    backdateSale(makeSale(60.00), '2026-10-20 10:00:00');
     makeSale(999.00, SaleStatus::VOIDED);
 
-    $trend = $this->service->weeklySalesTrend();
+    $trends = $this->service->salesTrends();
 
-    expect($trend)->toHaveCount(8)
-        ->and($trend[0]['period'])->toBe('2026-09-21')
-        ->and($trend[0]['revenue'])->toBe(0.0)
-        ->and($trend[6]['period'])->toBe('2026-11-02')
-        ->and($trend[6]['revenue'])->toBe(25.0)
-        ->and($trend[7]['period'])->toBe('2026-11-09')
-        ->and($trend[7]['revenue'])->toBe(40.0)
-        ->and($trend[7]['orders'])->toBe(1);
+    expect($trends['hourly'])->toHaveCount(24)
+        ->and($trends['hourly'][0]['period'])->toBe('2026-11-09 15:00')
+        ->and($trends['hourly'][0]['label'])->toBe('3 PM')
+        ->and($trends['hourly'][18]['revenue'])->toBe(40.0)
+        ->and($trends['hourly'][18]['orders'])->toBe(1)
+        ->and($trends['days7'])->toHaveCount(7)
+        ->and($trends['days7'][0]['label'])->toBe('Nov 4')
+        ->and($trends['days7'][4]['revenue'])->toBe(25.0)
+        ->and($trends['days30'])->toHaveCount(30)
+        ->and($trends['days30'][8]['revenue'])->toBe(60.0)
+        ->and($trends['days30'][29]['revenue'])->toBe(40.0)
+        ->and($trends['months6'])->toHaveCount(6)
+        ->and($trends['months6'][0]['label'])->toBe('Jun 2026')
+        ->and($trends['months6'][4]['revenue'])->toBe(60.0)
+        ->and($trends['months6'][5]['revenue'])->toBe(65.0)
+        ->and($trends['months6'][5]['orders'])->toBe(2);
 });
 
 it('splits completed sales by category using units sold', function () {
@@ -286,8 +295,10 @@ it('renders the dashboard with kpis, charts, restock items and movements', funct
         ->assertInertia(fn (Assert $page) => $page
             ->component('Dashboard/Index')
             ->has('kpis', 8)
-            ->has('salesTrend', 6)
-            ->has('weeklySalesTrend', 8)
+            ->has('salesTrends.hourly', 24)
+            ->has('salesTrends.days7', 7)
+            ->has('salesTrends.days30', 30)
+            ->has('salesTrends.months6', 6)
             ->has('salesByCategory')
             ->has('restockItems')
             ->has('movements', 0));

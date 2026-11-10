@@ -32,8 +32,10 @@ import { formatCurrency } from '@/components/ui/currency';
 import FilterTabs from '@/components/filters/filter-tabs';
 
 const GRANULARITY_OPTIONS = [
-    { value: 'monthly', label: 'Monthly' },
-    { value: 'weekly', label: 'Weekly' },
+    { value: 'hourly', label: '24 hours' },
+    { value: 'days7', label: '7 days' },
+    { value: 'days30', label: '30 days' },
+    { value: 'months6', label: '6 months' },
 ];
 
 const SCROLL_AREA =
@@ -190,13 +192,12 @@ const RecentMovementsCard = ({ movements }) => (
 
 const Index = ({
     kpis,
-    salesTrend,
-    weeklySalesTrend,
+    salesTrends,
     salesByCategory,
     restockItems,
     movements,
 }) => {
-    const [granularity, setGranularity] = useState('monthly');
+    const [granularity, setGranularity] = useState('months6');
     const [restockInventory, setRestockInventory] = useState(null);
     const [restockOpen, setRestockOpen] = useState(false);
 
@@ -263,8 +264,7 @@ const Index = ({
         },
     ];
 
-    const trendData =
-        granularity === 'weekly' ? weeklySalesTrend : salesTrend;
+    const trendData = salesTrends?.[granularity] ?? [];
 
     return (
         <div className="space-y-6">
