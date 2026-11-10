@@ -99,7 +99,6 @@ const Index = ({ account }) => {
             <Card>
                 <CardHeader>
                     <CardTitle>Appearance</CardTitle>
-                    <CardDescription>Choose how Aircare looks to you.</CardDescription>
                 </CardHeader>
 
                 <CardContent>

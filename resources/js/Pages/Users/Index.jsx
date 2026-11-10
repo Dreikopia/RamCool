@@ -139,7 +139,7 @@ const Index = ({
                                     <UserStatusBadge status={user.status} />
                                 </TableCell>
                                 <TableCell className="px-4 py-2 text-left">
-                                    <Button size="sm" onClick={() => openEdit(user)}>
+                                    <Button size="xs" onClick={() => openEdit(user)}>
                                         Edit
                                     </Button>
                                 </TableCell>
