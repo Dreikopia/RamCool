@@ -162,7 +162,7 @@ const StockFormDrawer = ({ open, onOpenChange, inventory, initialMode = 'in', pr
 
                     <div className="mt-3 flex items-end justify-between">
                         <div>
-                            <p className="text-3xl font-bold leading-none tabular-nums">
+                            <p className="text-3xl text-center font-bold leading-none tabular-nums">
                                 {current}
                             </p>
                             <p className="mt-1 text-xs text-muted-foreground">
@@ -171,24 +171,12 @@ const StockFormDrawer = ({ open, onOpenChange, inventory, initialMode = 'in', pr
                         </div>
                         <div className='gap-y-1'>
                             <div className="flex flex-wrap items-center justify-end gap-1">
-                                <ProductStatusBadge
-                                    status={inventory?.product?.status}
-                                    className="shrink-0"
-                                />
+
                                 <StockStatusBadge
                                     status={inventory?.product?.stock_status}
                                     className="shrink-0"
                                 />
                             </div>
-                            <p className="text-sm text-muted-foreground">
-                                Reorder at{'   '}
-                                <span className="text-xl font-medium text-foreground">
-                                    {inventory?.product?.reorder_level}
-                                </span>
-                            </p>
-
-                            <div />
-
                         </div>
                     </div>
                 </SheetHeader>

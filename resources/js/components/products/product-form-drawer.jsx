@@ -33,7 +33,6 @@ const Field = ({ label, htmlFor, error, className = '', children }) => (
 const emptyForm = () => ({
     name: '',
     sku: '',
-    status: 'active',
     category_id: '',
     supplier_id: '',
     unit_price: '',
@@ -45,7 +44,6 @@ const emptyForm = () => ({
 const formFor = (product) => ({
     name: product.name ?? '',
     sku: product.sku ?? '',
-    status: product.status ?? 'active',
     category_id: product.category_id ? String(product.category_id) : '',
     supplier_id: product.supplier_id ? String(product.supplier_id) : '',
     unit_price: product.unit_price ?? '',
@@ -56,6 +54,14 @@ const formFor = (product) => ({
 
 const ProductFormDrawer = ({ open, onOpenChange, product, categories, suppliers }) => {
     const isEdit = Boolean(product);
+
+    // Inactive suppliers can't be assigned, but a product keeps its current
+    // (possibly inactive) supplier so unrelated edits stay possible.
+    const supplierOptions = suppliers.filter(
+        (supplier) =>
+            supplier.is_active ||
+            String(product?.supplier_id ?? '') === String(supplier.id),
+    );
 
     const { data, setData, post, put, processing, errors, recentlySuccessful } =
         useForm(emptyForm());
@@ -84,15 +90,14 @@ const ProductFormDrawer = ({ open, onOpenChange, product, categories, suppliers 
     };
 
     const supplierLabels = Object.fromEntries(
-        suppliers.map((supplier) => [String(supplier.id), supplier.name]),
+        supplierOptions.map((supplier) => [
+            String(supplier.id),
+            supplier.is_active ? supplier.name : `${supplier.name} (inactive)`,
+        ]),
     );
     const categoryLabels = Object.fromEntries(
         categories.map((category) => [String(category.id), category.name]),
     );
-    const statusLabels = {
-        active: 'Active',
-        inactive: 'Inactive',
-    };
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
@@ -227,11 +232,13 @@ const ProductFormDrawer = ({ open, onOpenChange, product, categories, suppliers 
                                             <SelectValue placeholder="Select a supplier" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {suppliers.map((supplier) => (
+                                            {supplierOptions.map((supplier) => (
                                                 <SelectItem key={supplier.id}
                                                     value={String(supplier.id)}
                                                 >
-                                                    {supplier.name}
+                                                    {supplier.is_active
+                                                        ? supplier.name
+                                                        : `${supplier.name} (inactive)`}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
@@ -272,32 +279,6 @@ const ProductFormDrawer = ({ open, onOpenChange, product, categories, suppliers 
                                 </Field>
 
                             </div>
-
-                            <Field label="Status" htmlFor="status" error={errors.status}>
-                                <Select
-                                    value={data.status}
-                                    onValueChange={(value) =>
-                                        setData('status', value == null ? 'active' : String(value))
-                                    }
-                                    items={statusLabels}
-                                >
-                                    <SelectTrigger
-                                        id="status"
-                                        className="w-full"
-                                        aria-invalid={Boolean(errors.status)}
-                                    >
-                                        <SelectValue placeholder="Select a status" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="active">Active</SelectItem>
-                                        <SelectItem value="inactive">Inactive</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <p className="text-xs text-muted-foreground">
-                                    Inactive products cannot be sold in new transactions.
-                                    Existing stock is still tracked.
-                                </p>
-                            </Field>
                         </div>
                     </div>
 

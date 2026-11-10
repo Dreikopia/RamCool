@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use App\Enums\ProductStatus;
+use App\Models\Product;
+use App\Models\Supplier;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -36,7 +38,21 @@ class UpdateProductRequest extends FormRequest
             ],
             'status' => ['sometimes', 'required', Rule::enum(ProductStatus::class)],
             'category_id' => ['required', 'exists:categories,id'],
-            'supplier_id' => ['nullable', 'exists:suppliers,id'],
+            'supplier_id' => [
+                'nullable',
+                function ($attribute, $value, $fail) {
+                    $product = $this->route('product');
+
+                    // Editing a product keeps its existing supplier even when inactive.
+                    if ($product instanceof Product && (int) $product->supplier_id === (int) $value) {
+                        return;
+                    }
+
+                    if (! Supplier::whereKey($value)->where('is_active', true)->exists()) {
+                        $fail('The selected supplier is not active.');
+                    }
+                },
+            ],
             'unit_price' => ['required', 'numeric', 'min:0'],
             'reorder_level' => ['required', 'integer', 'min:0'],
         ];

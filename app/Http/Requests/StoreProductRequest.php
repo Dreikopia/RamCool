@@ -30,7 +30,10 @@ class StoreProductRequest extends FormRequest
             'sku' => ['required', 'string', 'max:255', 'unique:products,sku'],
             'status' => ['sometimes', 'required', Rule::enum(ProductStatus::class)],
             'category_id' => ['required', 'exists:categories,id'],
-            'supplier_id' => ['nullable', 'exists:suppliers,id'],
+            'supplier_id' => [
+                'nullable',
+                Rule::exists('suppliers', 'id')->where('is_active', true),
+            ],
             'unit_price' => ['required', 'numeric', 'min:0'],
             'reorder_level' => ['required', 'integer', 'min:0'],
         ];
@@ -45,6 +48,7 @@ class StoreProductRequest extends FormRequest
     {
         return [
             'image.max' => 'The image must be 2 MB or smaller.',
+            'supplier_id.exists' => 'The selected supplier is not active.',
         ];
     }
 }

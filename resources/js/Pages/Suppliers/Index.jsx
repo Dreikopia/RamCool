@@ -6,6 +6,7 @@ import { FilterTabs } from '@/components/filters/filter-tabs';
 import { SearchInput } from '@/components/filters/search-input';
 import { ListEmptyState } from '@/components/list-empty-state';
 import SupplierDialog from '@/components/suppliers/supplier-dialog';
+import SupplierRowActions from '@/components/suppliers/supplier-row-actions';
 import { TableFiller } from '@/components/table-filler';
 import { StatusIndicator } from '@/components/ui/status-indicator';
 import { Button } from '@/components/ui/button';
@@ -182,22 +183,13 @@ const Index = ({
 
                                 {canManage && (
                                     <TableCell className="px-4 py-2 text-right">
-                                        <div className="flex justify-end gap-2">
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
+                                        <div className="flex justify-end">
+                                            <SupplierRowActions
+                                                supplier={supplier}
                                                 disabled={togglingId === supplier.id}
-                                                onClick={() => toggleStatus(supplier)}
-                                            >
-                                                {supplier.is_active ? 'Deactivate' : 'Activate'}
-                                            </Button>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => openEdit(supplier)}
-                                            >
-                                                Edit
-                                            </Button>
+                                                onEdit={openEdit}
+                                                onToggleStatus={toggleStatus}
+                                            />
                                         </div>
                                     </TableCell>
                                 )}

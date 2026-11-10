@@ -76,9 +76,14 @@ class SupplierController extends Controller
 
         $supplier->update(['is_active' => $isActive]);
 
-        return back()->with(
-            'success',
-            $isActive ? 'Supplier activated.' : 'Supplier deactivated.',
-        );
+        $products = $supplier->products()->count();
+
+        $message = match (true) {
+            $isActive => 'Supplier activated.',
+            $products > 0 => "Supplier deactivated. {$products} products still reference it.",
+            default => 'Supplier deactivated.',
+        };
+
+        return back()->with('success', $message);
     }
 }

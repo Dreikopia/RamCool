@@ -28,6 +28,7 @@ class InventoryController extends Controller
 
         return Inertia::render('Inventory/Index', [
             'inventories' => Inventory::query()
+                ->whereHas('product')
                 ->with([
                     'product.category',
                     'movements' => fn ($query) => $query->with('user')->latest()->take(5),

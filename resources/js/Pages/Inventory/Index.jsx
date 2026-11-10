@@ -1,5 +1,4 @@
 import { useCallback, useState } from 'react';
-import { Pen } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import StockFormDrawer from '@/components/Inventory/stock-form-drawer';
 import { CheckboxListFilter } from '@/components/filters/checkbox-list-filter';
@@ -203,13 +202,11 @@ const Index = ({
 
                                 <TableCell className="px-4 py-2 text-right">
                                     <Button
-                                        variant="ghost"
-                                        size="icon-sm"
-                                        aria-label={`Update stock for ${product.name}`}
-                                        title="Update stock"
+                                        variant="outline"
+                                        size="sm"
                                         onClick={() => openDrawer(id, 'in')}
                                     >
-                                        <Pen className="size-4" />
+                                        Update stock
                                     </Button>
                                 </TableCell>
                             </TableRow>

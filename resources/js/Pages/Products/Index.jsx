@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { usePage } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { DataTableCard } from '@/components/data-table-card';
 import { CheckboxListFilter } from '@/components/filters/checkbox-list-filter';
@@ -7,6 +7,7 @@ import { FilterBar } from '@/components/filters/filter-bar';
 import { FilterTabs } from '@/components/filters/filter-tabs';
 import { SearchInput } from '@/components/filters/search-input';
 import { ListEmptyState } from '@/components/list-empty-state';
+import ProductDeleteDialog from '@/components/products/product-delete-dialog';
 import ProductFormDrawer from '@/components/products/product-form-drawer';
 import ProductRowActions from '@/components/products/product-row-actions';
 import ProductStatusBadge from '@/components/products/product-status-badge';
@@ -48,6 +49,8 @@ const Index = ({
     const canManage = usePage().props.auth?.can?.manageCatalog ?? false;
 
     const [drawer, setDrawer] = useState({ open: false, product: null });
+    const [deleting, setDeleting] = useState(null);
+    const [togglingId, setTogglingId] = useState(null);
 
     const { filters, setFilter, removeFilters, clearAll, isPending } = useFilters({
         initialFilters,
@@ -57,6 +60,19 @@ const Index = ({
 
     const openCreate = useCallback(() => setDrawer({ open: true, product: null }), []);
     const openEdit = useCallback((product) => setDrawer({ open: true, product }), []);
+
+    const toggleStatus = (product) => {
+        router.patch(
+            `/products/${product.id}/status`,
+            {},
+            {
+                preserveScroll: true,
+                only: ONLY_PROPS,
+                onStart: () => setTogglingId(product.id),
+                onFinish: () => setTogglingId(null),
+            },
+        );
+    };
 
     const chips = [];
 
@@ -203,7 +219,7 @@ const Index = ({
                             <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
                                 Supplier
                             </TableHead>
-                            <TableHead className="h-9 px-4 text-right text-xs font-medium text-muted-foreground">
+                            <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
                                 Quantity
                             </TableHead>
                             <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
@@ -250,7 +266,7 @@ const Index = ({
                                     {product.supplier?.name ?? '—'}
                                 </TableCell>
 
-                                <TableCell className="px-4 py-2 text-right font-medium tabular-nums">
+                                <TableCell className="px-4 py-2 text-center font-medium tabular-nums">
                                     {product.in_stock}
                                 </TableCell>
 
@@ -261,7 +277,13 @@ const Index = ({
                                 {canManage && (
                                     <TableCell className="px-4 py-2 text-right">
                                         <div className="flex justify-end">
-                                            <ProductRowActions product={product} onEdit={openEdit} />
+                                            <ProductRowActions
+                                                product={product}
+                                                onEdit={openEdit}
+                                                onDelete={setDeleting}
+                                                onToggleStatus={toggleStatus}
+                                                disabled={togglingId === product.id}
+                                            />
                                         </div>
                                     </TableCell>
                                 )}
@@ -281,6 +303,11 @@ const Index = ({
                 product={drawer.product}
                 categories={categories}
                 suppliers={suppliers}
+            />
+
+            <ProductDeleteDialog
+                product={deleting}
+                onOpenChange={(open) => !open && setTimeout(() => setDeleting(null), 200)}
             />
         </>
     );

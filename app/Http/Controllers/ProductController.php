@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateProductRequest;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Supplier;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -42,6 +43,7 @@ class ProductController extends Controller
                 'supplier',
                 'inventory:id,product_id,quantity',
             ])
+                ->withCount('saleItems')
                 ->search($search)
                 ->when($status, fn ($query) => $query->where('status', $status->value))
                 ->when(
@@ -57,7 +59,7 @@ class ProductController extends Controller
                 ->paginate(8)
                 ->withQueryString(),
             'categories' => Category::orderBy('name')->get(),
-            'suppliers' => Supplier::orderBy('name')->get(['id', 'name']),
+            'suppliers' => Supplier::orderBy('name')->get(['id', 'name', 'is_active']),
 
             'filters' => [
                 'search' => $search,
@@ -116,5 +118,60 @@ class ProductController extends Controller
         return redirect()
             ->route('products')
             ->with('success', 'Product updated successfully.');
+    }
+
+    /**
+     * Delete a product that was never stocked and never sold.
+     *
+     * Products with sale or inventory history cannot be removed: those pages
+     * resolve the product without trashed rows, so the answer is to mark the
+     * product inactive instead. Everything else is soft-deleted.
+     */
+    public function destroy(Product $product): RedirectResponse
+    {
+        $this->authorize('delete', $product);
+
+        if ($product->saleItems()->exists()) {
+            return back()->with(
+                'error',
+                'This product appears in past sales. Mark it inactive instead of deleting it.',
+            );
+        }
+
+        if ($product->inventory()->exists()) {
+            return back()->with(
+                'error',
+                'This product has stock history. Mark it inactive instead of deleting it.',
+            );
+        }
+
+        if ($product->image_path) {
+            Storage::disk('public')->delete($product->image_path);
+        }
+
+        $product->delete();
+
+        return redirect()
+            ->route('products')
+            ->with('success', 'Product deleted successfully.');
+    }
+
+    /**
+     * Flip a product between active and inactive status.
+     */
+    public function toggleStatus(Product $product): RedirectResponse
+    {
+        $this->authorize('update', $product);
+
+        $isActive = $product->status !== ProductStatus::ACTIVE;
+
+        $product->update([
+            'status' => $isActive ? ProductStatus::ACTIVE : ProductStatus::INACTIVE,
+        ]);
+
+        return back()->with(
+            'success',
+            $isActive ? 'Product marked active.' : 'Product marked inactive.',
+        );
     }
 }
