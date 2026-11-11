@@ -1,58 +1,140 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# RamCool — Inventory & Sales Management System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A full-stack inventory and point-of-sale (POS) web application built for an air conditioning and refrigeration parts business. 
 
-## About Laravel
+> **Note:** This is my first full-stack application built using **Laravel** and **React** together via **Inertia.js**. Below is an overview of how the app works, how it's structured, and what I learned (including the parts where I got completely stuck!).
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 💡 What is RamCool?
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+RamCool is designed to solve day-to-day retail and inventory tracking challenges for cooling equipment businesses:
+- Preventing accidental stock overselling.
+- Keeping an unchangeable audit log of every stock movement (deliveries, sales, damages).
+- Fast and simple point-of-sale checkout for staff on the floor.
+- Clean visual dashboards for business owners to monitor sales trends and low-stock alerts.
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 🚀 How It Works
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 1. Point of Sale (POS) & Checkout
+- **Interactive Cart:** Search or filter products by category, click to add to cart, and adjust quantities on the fly with live subtotal/total calculations.
+- **Stock Depletion & Safety:** Every sale verifies current stock levels before creating the order.
+- **Voiding Sales:** If a sale was entered by mistake, admins can void it. The system automatically replenishes the inventory and creates a reversal record.
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+### 2. Inventory & Movement Tracking
+- **Real-Time Stock Status:** Products automatically calculate their status (`In Stock`, `Low Stock`, `Out of Stock`) based on reorder thresholds.
+- **Movement Audit Ledger:** Any time stock changes—whether through **Stock In** (new shipments), **Stock Out** (sales/orders), or **Adjustments** (damaged goods, physical inventory counts)—a permanent log entry is recorded with the user who performed it and the reason.
 
-## Agentic Development
+### 3. Product, Category & Supplier Catalog
+- Manage products with thumbnail image uploads, descriptions, categories, and unit prices.
+- Active/Inactive status toggle prevents discontinued items from being sold while keeping past sales data intact.
+- Supplier directory linked to stock tracking.
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+### 4. Analytics Dashboard
+- **Sales Trends:** Visual line charts showing revenue over time.
+- **Category Breakdown:** Pie/donut charts showing sales volume across categories (powered by **Recharts**).
+- **KPI Metrics:** Immediate glance at total revenue, total orders, low stock items, and top sellers.
 
-```bash
-composer require laravel/boost --dev
+### 5. Roles & Account Lifecycle
+- **Roles:** Separate permissions for **Admin** and regular **Staff**.
+- **Secure Activation:** New staff accounts are created by an admin and activated through cryptographically signed invite links where users set their own passwords.
 
-php artisan boost:install
-```
+---
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+## 🛠️ Tech Stack
 
-## Contributing
+- **Backend:** PHP 8.3+, Laravel 12/13, Laravel Fortify (Auth), Pest PHP (Testing)
+- **Frontend:** React 19, Inertia.js v3, Tailwind CSS v4, Base UI, Lucide Icons, Recharts, Motion
+- **Tooling:** Vite, Laravel Herd, Pint
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+## 🧠 What I Learned & Where I Got Stuck
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Building this project was a huge learning curve. Moving from simple scripts to a full-stack, production-style application meant tackling real design patterns and debugging tough edge cases.
 
-## Security Vulnerabilities
+### 1. React (The Fundamentals)
+* **What I learned:**
+  * **Core React:** Breaking UI into small, reusable components rather than monolithic files. Understanding how props pass data down and callbacks pass events up.
+  * **Hooks:** Managing local state with `useState`, handling side-effects with `useEffect`, and creating custom hooks (`useFilters`, `useTheme`, `useDebouncedValue`) to keep components clean.
+  * **UI State:** Building complex client-side features like the POS cart where item additions, removals, and quantity adjustments immediately reflect in the totals.
+* **Where I got stuck / Difficulties:**
+  * **State synchronization & prop drilling:** Early on, I tried passing cart state through 4 layers of components before realizing I needed to structure my component tree better.
+  * **Re-render loops:** I accidentally triggered infinite re-renders with `useEffect` when filtering product lists until I learned how dependency arrays work.
+  * **Controlled vs Uncontrolled inputs:** Syncing custom modal forms and image file pickers with React state was frustrating until I understood how to handle file change events properly.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+---
 
-## License
+### 2. Inertia.js (Bridging Laravel and React)
+* **What I learned:**
+  * **The "No API" SPA Experience:** Enjoying the feel of a modern React SPA without having to maintain a separate client-side router or write boilerplate REST API endpoints.
+  * **`useForm` Hook:** Handling form submissions, tracking `processing` states to disable buttons, and automatically binding Laravel backend validation errors to input fields.
+  * **Flash Messages & Partial Reloads:** Passing server notifications (success/error toasts) directly into Inertia page props.
+* **Where I got stuck / Difficulties:**
+  * **Preserving state on page visits:** Learning how Inertia reloads page props without losing active tab selections or filter queries (`preserveState: true` and `preserveScroll: true` were lifesavers).
+  * **File uploads over Inertia:** Handling `FormData` for product image uploads required using `router.post()` with multipart options, which caused validation errors until the headers and payload were configured properly.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+
+### 3. Laravel & PHP (Backend Architecture)
+* **What I learned:**
+  * **Service Classes & Separation of Concerns:** Moving complex business logic out of controllers into dedicated services (`SaleService`, `InventoryService`, `DashboardService`).
+  * **Database Transactions (`DB::transaction`):** Guaranteeing that if a sale item fails or stock runs out midway, the entire transaction rolls back so the database is never left in a corrupted state.
+  * **PHP 8 Features & OOP:** Utilizing constructor property promotion, strict parameter typing, and PHP Enums (`ProductStatus`, `SaleStatus`, `MovementType`) to prevent invalid states.
+  * **Form Requests & Policies:** Keeping controllers slim by using Form Requests for input validation and Policies for role-based authorization.
+  * **Automated Testing:** Writing feature and unit tests with **Pest PHP** to verify critical math, authorization, and inventory movement rules.
+* **Where I got stuck / Difficulties:**
+  * **Inventory race conditions & atomic updates:** Figuring out how to update inventory quantities safely during checkout while preventing negative stock if two actions happen close together.
+  * **Service class dependency injection:** Initially, I didn't know how to pass services into one another through the service container. Learning how Laravel's DI auto-resolves dependencies in constructors was a breakthrough moment.
+
+---
+
+### 4. Git & Developer Workflow
+* **What I learned:**
+  * **Branching & Pull Requests:** Working in feature branches (`feature/sales-cart`, `feature/inventory-movements`) instead of committing everything straight to `main`.
+  * **Git Stashing:** Saving work in progress with `git stash` when needing to quickly fix a bug on another branch without losing uncommitted edits.
+  * **Meaningful Commits:** Writing clean, atomic commit messages that explain *why* a change was made, not just *what*.
+* **Where I got stuck / Difficulties:**
+  * **Merge Conflicts:** Resolving conflicts when frontend components and migration files were updated in different branches.
+  * **Untracked files & `.gitignore`:** Accidental commits of build files or temporary files taught me how to properly manage `.gitignore` and `git status`.
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- PHP 8.3+ with Composer
+- Node.js (v20+) & npm
+- SQLite or MySQL
+
+### Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone <your-repository-url>
+   cd aircare
+   ```
+
+2. **Run automated setup:**
+   ```bash
+   composer run setup
+   ```
+   *This command installs Composer and NPM dependencies, sets up your `.env`, generates the app key, runs migrations, and builds frontend assets.*
+
+3. **Start the development server:**
+   ```bash
+   composer run dev
+   ```
+   *(Runs the Laravel server, queue worker, and Vite dev server simultaneously via Concurrently).*
+
+4. **Run tests:**
+   ```bash
+   php artisan test
+   ```
+
+---
+
+## 📄 License
+This project is open-source under the [MIT License](LICENSE).
