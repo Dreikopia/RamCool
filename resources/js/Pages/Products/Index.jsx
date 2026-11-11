@@ -1,5 +1,6 @@
-import { useCallback, useState } from 'react';
+    import { useCallback, useState } from 'react';
 import { router, usePage } from '@inertiajs/react';
+import { LayoutGrid, Table2 } from 'lucide-react';
 import AppLayout from '@/Layouts/AppLayout';
 import { DataTableCard } from '@/components/data-table-card';
 import { CheckboxListFilter } from '@/components/filters/checkbox-list-filter';
@@ -7,6 +8,7 @@ import { FilterBar } from '@/components/filters/filter-bar';
 import { FilterTabs } from '@/components/filters/filter-tabs';
 import { SearchInput } from '@/components/filters/search-input';
 import { ListEmptyState } from '@/components/list-empty-state';
+import ProductCard from '@/components/products/product-card';
 import ProductDeleteDialog from '@/components/products/product-delete-dialog';
 import ProductFormDrawer from '@/components/products/product-form-drawer';
 import ProductRowActions from '@/components/products/product-row-actions';
@@ -40,6 +42,12 @@ const DEFAULT_FILTERS = {
 
 const ONLY_PROPS = ['products', 'categories', 'suppliers', 'filters'];
 
+const VIEW_STORAGE_KEY = 'products-view';
+const VIEW_OPTIONS = [
+    { value: 'table', label: 'Table view', icon: Table2 },
+    { value: 'grid', label: 'Card view', icon: LayoutGrid },
+];
+
 const Index = ({
     products = { data: [], links: [], total: 0 },
     categories = [],
@@ -51,6 +59,14 @@ const Index = ({
     const [drawer, setDrawer] = useState({ open: false, product: null });
     const [deleting, setDeleting] = useState(null);
     const [togglingId, setTogglingId] = useState(null);
+    const [view, setView] = useState(() =>
+        localStorage.getItem(VIEW_STORAGE_KEY) === 'grid' ? 'grid' : 'table',
+    );
+
+    const changeView = (next) => {
+        setView(next);
+        localStorage.setItem(VIEW_STORAGE_KEY, next);
+    };
 
     const { filters, setFilter, removeFilters, clearAll, isPending } = useFilters({
         initialFilters,
@@ -161,6 +177,25 @@ const Index = ({
             />
 
             <div className="ml-auto flex flex-wrap items-center gap-2">
+                <div
+                    role="group"
+                    aria-label="Product layout"
+                    className="flex items-center gap-0.5 rounded-lg border border-border p-0.5"
+                >
+                    {VIEW_OPTIONS.map(({ value, label, icon: Icon }) => (
+                        <Button
+                            key={value}
+                            variant={view === value ? 'secondary' : 'ghost'}
+                            size="icon-sm"
+                            aria-label={label}
+                            aria-pressed={view === value}
+                            onClick={() => changeView(value)}
+                        >
+                            <Icon />
+                        </Button>
+                    ))}
+                </div>
+
                 <FilterTabs
                     options={STATUS_OPTIONS}
                     value={filters.status}
@@ -204,97 +239,113 @@ const Index = ({
                     )
                 }
             >
-                <Table>
-                    <TableHeader>
-                        <TableRow className="bg-muted/40 hover:bg-muted/40">
-                            <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
-                                Product
-                            </TableHead>
-                            <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
-                                Unit Price
-                            </TableHead>
-                            <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
-                                Category
-                            </TableHead>
-                            <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
-                                Supplier
-                            </TableHead>
-                            <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
-                                Quantity
-                            </TableHead>
-                            <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
-                                Status
-                            </TableHead>
-                            {canManage && (
-                                <TableHead className="h-9 px-4 text-right text-xs font-medium text-muted-foreground">
-                                    Actions
-                                </TableHead>
-                            )}
-                        </TableRow>
-                    </TableHeader>
-
-                    <TableBody>
+                {view === 'grid' ? (
+                    <ul className="grid gap-3 p-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
                         {products.data.map((product) => (
-                            <TableRow key={product.id} className="align-middle">
-                                <TableCell className="px-4 py-2 text-left">
-                                    <div className="flex items-center gap-3">
-                                        <ProductThumbnail
-                                            product={product}
-                                            className="size-9 rounded-md"
-                                        />
-
-                                        <div className="min-w-0">
-                                            <div className="max-w-[12rem] truncate font-medium">
-                                                {product.name}
-                                            </div>
-                                            <div className="mt-0.5 text-xs text-muted-foreground">
-                                                {product.sku}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </TableCell>
-
-                                <TableCell className="px-4 py-2 text-left font-medium">
-                                    <Currency value={product.unit_price} />
-                                </TableCell>
-
-                                <TableCell className="px-4 py-2 text-left text-sm">
-                                    {product.category?.name ?? '—'}
-                                </TableCell>
-
-                                <TableCell className="px-4 py-2 text-left text-sm">
-                                    {product.supplier?.name ?? '—'}
-                                </TableCell>
-
-                                <TableCell className="px-4 py-2 text-center font-medium tabular-nums">
-                                    {product.in_stock}
-                                </TableCell>
-
-                                <TableCell className="px-4 py-2 text-left">
-                                    <ProductStatusBadge status={product.status} />
-                                </TableCell>
-
+                            <ProductCard
+                                key={product.id}
+                                product={product}
+                                canManage={canManage}
+                                onEdit={canManage ? openEdit : undefined}
+                                onDelete={setDeleting}
+                                onToggleStatus={toggleStatus}
+                                disabled={togglingId === product.id}
+                            />
+                        ))}
+                    </ul>
+                ) : (
+                    <Table>
+                        <TableHeader>
+                            <TableRow className="bg-muted/40 hover:bg-muted/40">
+                                <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
+                                    Product
+                                </TableHead>
+                                <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
+                                    Unit Price
+                                </TableHead>
+                                <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
+                                    Category
+                                </TableHead>
+                                <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
+                                    Supplier
+                                </TableHead>
+                                <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
+                                    Quantity
+                                </TableHead>
+                                <TableHead className="h-9 px-4 text-left text-xs font-medium text-muted-foreground">
+                                    Status
+                                </TableHead>
                                 {canManage && (
-                                    <TableCell className="px-4 py-2 text-right">
-                                        <div className="flex justify-end">
-                                            <ProductRowActions
-                                                product={product}
-                                                onEdit={openEdit}
-                                                onDelete={setDeleting}
-                                                onToggleStatus={toggleStatus}
-                                                disabled={togglingId === product.id}
-                                            />
-                                        </div>
-                                    </TableCell>
+                                    <TableHead className="h-9 px-4 text-right text-xs font-medium text-muted-foreground">
+                                        Actions
+                                    </TableHead>
                                 )}
                             </TableRow>
-                        ))}
-                        <TableFiller
-                            rows={8 - products.data.length}
-                            cols={canManage ? 7 : 6}
-                        />
-                    </TableBody>
-                </Table>
+                        </TableHeader>
+    
+                        <TableBody>
+                            {products.data.map((product) => (
+                                <TableRow key={product.id} className="align-middle">
+                                    <TableCell className="px-4 py-2 text-left">
+                                        <div className="flex items-center gap-3">
+                                            <ProductThumbnail
+                                                product={product}
+                                                className="size-9 rounded-md"
+                                            />
+    
+                                            <div className="min-w-0">
+                                                <div className="max-w-[12rem] truncate font-medium">
+                                                    {product.name}
+                                                </div>
+                                                <div className="mt-0.5 text-xs text-muted-foreground">
+                                                    {product.sku}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </TableCell>
+    
+                                    <TableCell className="px-4 py-2 text-left font-medium">
+                                        <Currency value={product.unit_price} />
+                                    </TableCell>
+    
+                                    <TableCell className="px-4 py-2 text-left text-sm">
+                                        {product.category?.name ?? '—'}
+                                    </TableCell>
+    
+                                    <TableCell className="px-4 py-2 text-left text-sm">
+                                        {product.supplier?.name ?? '—'}
+                                    </TableCell>
+    
+                                    <TableCell className="px-4 py-2 text-center font-medium tabular-nums">
+                                        {product.in_stock}
+                                    </TableCell>
+    
+                                    <TableCell className="px-4 py-2 text-left">
+                                        <ProductStatusBadge status={product.status} />
+                                    </TableCell>
+    
+                                    {canManage && (
+                                        <TableCell className="px-4 py-2 text-right">
+                                            <div className="flex justify-end">
+                                                <ProductRowActions
+                                                    product={product}
+                                                    onEdit={openEdit}
+                                                    onDelete={setDeleting}
+                                                    onToggleStatus={toggleStatus}
+                                                    disabled={togglingId === product.id}
+                                                />
+                                            </div>
+                                        </TableCell>
+                                    )}
+                                </TableRow>
+                            ))}
+                            <TableFiller
+                                rows={8 - products.data.length}
+                                cols={canManage ? 7 : 6}
+                            />
+                        </TableBody>
+                    </Table>
+                )}
             </DataTableCard>
 
             <ProductFormDrawer
