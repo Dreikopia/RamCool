@@ -29,6 +29,13 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { formatCurrency } from '@/components/ui/currency';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import FilterTabs from '@/components/filters/filter-tabs';
 
 const GRANULARITY_OPTIONS = [
@@ -36,6 +43,11 @@ const GRANULARITY_OPTIONS = [
     { value: 'days7', label: '7 days' },
     { value: 'days30', label: '30 days' },
     { value: 'months6', label: '6 months' },
+];
+
+const CATEGORY_RANGE_OPTIONS = [
+    { value: 'days7', label: 'Last 7 days' },
+    { value: 'days30', label: 'Last 30 days' },
 ];
 
 const SCROLL_AREA =
@@ -198,6 +210,7 @@ const Index = ({
     movements,
 }) => {
     const [granularity, setGranularity] = useState('months6');
+    const [categoryRange, setCategoryRange] = useState('days30');
     const [restockInventory, setRestockInventory] = useState(null);
     const [restockOpen, setRestockOpen] = useState(false);
 
@@ -219,13 +232,13 @@ const Index = ({
 
     const cards = [
         {
-            label: 'Total revenue',
-            value: formatCurrency(kpis.total_revenue),
+            label: 'Revenue this month',
+            value: formatCurrency(kpis.revenue_this_month),
             icon: Wallet,
             support:
                 kpis.revenue_trend_percent === null
-                    ? 'No prior month to compare'
-                    : 'vs last month',
+                    ? 'No sales last month to compare'
+                    : `vs ${formatCurrency(kpis.revenue_previous_month)} by this time last month`,
             trend: kpis.revenue_trend_percent,
         },
         {
@@ -265,6 +278,7 @@ const Index = ({
     ];
 
     const trendData = salesTrends?.[granularity] ?? [];
+    const categoryData = salesByCategory?.[categoryRange] ?? [];
 
     return (
         <div className="space-y-6">
@@ -301,9 +315,33 @@ const Index = ({
                 <Card className="flex h-full flex-col lg:col-span-4">
                     <CardHeader>
                         <CardTitle>Sales by category</CardTitle>
+                        <CardAction>
+                            <Select
+                                value={categoryRange}
+                                onValueChange={setCategoryRange}
+                                items={CATEGORY_RANGE_OPTIONS}
+                            >
+                                <SelectTrigger
+                                    size="sm"
+                                    aria-label="Sales by category range"
+                                >
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {CATEGORY_RANGE_OPTIONS.map((option) => (
+                                        <SelectItem
+                                            key={option.value}
+                                            value={option.value}
+                                        >
+                                            {option.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </CardAction>
                     </CardHeader>
                     <CardContent className="flex flex-1 flex-col justify-center">
-                        <SalesByCategoryChart data={salesByCategory} />
+                        <SalesByCategoryChart data={categoryData} />
                     </CardContent>
                 </Card>
             </div>

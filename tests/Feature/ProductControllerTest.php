@@ -34,7 +34,10 @@ it('creates a product with an uploaded image', function () {
 
     $product = Product::query()->where('sku', 'AC-TEST-01')->first();
 
-    Inventory::factory()->for($product)->create(['quantity' => 120]);
+    expect($product->inventory)->not->toBeNull()
+        ->and($product->inventory->quantity)->toBe(0);
+
+    $product->inventory->update(['quantity' => 120]);
 
     expect($product->fresh())->not->toBeNull()
         ->and($product->name)->toBe('20x20x1 MERV 11 Filter')

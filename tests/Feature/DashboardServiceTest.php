@@ -185,6 +185,23 @@ it('splits completed sales by category using units sold', function () {
         ->and($rows[1]['percentage'])->toBe(33.3);
 });
 
+it('filters sales by category to the selected number of days', function () {
+    $product = Product::factory()->create();
+
+    $recent = makeSale(30.00);
+    $recent->items()->create(['product_id' => $product->id, 'quantity' => 2, 'unit_price' => 15.00, 'subtotal' => 30.00]);
+    $recent->created_at = now()->subDays(3);
+    $recent->save();
+
+    $older = makeSale(10.00);
+    $older->items()->create(['product_id' => $product->id, 'quantity' => 1, 'unit_price' => 10.00, 'subtotal' => 10.00]);
+    $older->created_at = now()->subDays(20);
+    $older->save();
+
+    expect(collect($this->service->salesByCategory(7))->sum('sales_count'))->toBe(2)
+        ->and(collect($this->service->salesByCategory(30))->sum('sales_count'))->toBe(3);
+});
+
 it('limits sales by category to the ten highest sales categories', function () {
     foreach (range(1, 11) as $i) {
         $category = Category::factory()->create(['name' => "Category {$i}"]);
@@ -299,7 +316,8 @@ it('renders the dashboard with kpis, charts, restock items and movements', funct
             ->has('salesTrends.days7', 7)
             ->has('salesTrends.days30', 30)
             ->has('salesTrends.months6', 6)
-            ->has('salesByCategory')
+            ->has('salesByCategory.days7')
+            ->has('salesByCategory.days30')
             ->has('restockItems')
             ->has('movements', 0));
 });

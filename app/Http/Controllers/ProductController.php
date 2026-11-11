@@ -79,7 +79,7 @@ class ProductController extends Controller
         if ($request->hasFile('image')) {
             $validated['image_path'] = $request->file('image')->store('images/products', 'public');
         }
-        Product::create($validated);
+        Product::create($validated)->inventory()->create(['quantity' => 0]);
 
         return redirect()
             ->route('products')
