@@ -120,13 +120,14 @@ class DashboardService
         );
     }
 
-    public function salesByCategory(): array
+    public function salesByCategory(int $days = 30): array
     {
         $rows = SaleItem::query()
             ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
             ->join('products', 'products.id', '=', 'sale_items.product_id')
             ->join('categories', 'categories.id', '=', 'products.category_id')
             ->where('sales.status', SaleStatus::COMPLETED)
+            ->where('sales.created_at', '>=', now()->subDays($days - 1)->startOfDay())
             ->groupBy('categories.id', 'categories.name')
             ->select(['categories.id as category_id', 'categories.name as name'])
             ->selectRaw('SUM(sale_items.subtotal) as revenue')

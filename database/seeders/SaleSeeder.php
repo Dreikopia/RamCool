@@ -11,21 +11,8 @@ use Illuminate\Database\Seeder;
 class SaleSeeder extends Seeder
 {
     /**
-     * Demo carts seeded in order. The third sale is voided so the seed data
-     * exercises both the completed and voided states.
-     *
-     * @var list<array{quantity: int, remarks: ?string}>
-     */
-    private const DEMO_SALES = [
-        ['quantity' => 2, 'remarks' => 'Walk-in customer'],
-        ['quantity' => 1, 'remarks' => 'Delivery order'],
-        ['quantity' => 3, 'remarks' => 'Phone order'],
-        ['quantity' => 2, 'remarks' => null],
-    ];
-
-    /**
-     * Seed deterministic sales through SaleService so inventory quantities and
-     * movement history always match the recorded sales.
+     * Seed deterministic sales spread across the dashboard chart ranges so the
+     * month comparison, trend line and category breakdown all have data.
      *
      * Re-running is safe: seeding is skipped once any sale exists.
      */
@@ -45,13 +32,20 @@ class SaleSeeder extends Seeder
             return;
         }
 
-        $products = Product::query()
-            ->whereHas('inventory', fn ($query) => $query->where('quantity', '>=', 3))
+        $stocked = Product::query()
+            ->whereHas('inventory', fn ($query) => $query->where('quantity', '>=', 4))
             ->orderBy('id')
-            ->take(count(self::DEMO_SALES))
             ->get();
 
-        if ($products->count() < count(self::DEMO_SALES)) {
+        // One product per category first so the category chart has variety,
+        // then any remaining stocked products.
+        $primary = $stocked->unique('category_id')->values();
+
+        $products = $primary
+            ->concat($stocked->whereNotIn('id', $primary->pluck('id')))
+            ->values();
+
+        if ($products->isEmpty()) {
             $this->command?->warn('Not enough stocked products — run InventorySeeder first.');
 
             return;
@@ -59,14 +53,39 @@ class SaleSeeder extends Seeder
 
         $service = app(SaleService::class);
 
-        foreach (self::DEMO_SALES as $index => $demo) {
-            $sale = $service->createSale([
-                ['product_id' => $products[$index]->id, 'quantity' => $demo['quantity']],
-            ], $userId, $demo['remarks']);
+        // [sold at, quantity, remarks] — newest first so a fresh database
+        // shows a sale in every chart range.
+        $demoSales = [
+            [now(), 2, 'Walk-in customer'],
+            [now()->subDays(3), 1, 'Delivery order'],
+            [now()->subDays(10), 2, null],
+            [now()->subDays(20), 1, 'Phone order'],
+            [now()->subMonthNoOverflow(), 2, 'Repeat customer'],
+            [now()->subMonthsNoOverflow(2), 1, 'Installation package'],
+            [now()->subMonthsNoOverflow(4), 2, 'Walk-in customer'],
+            [now()->subMonthsNoOverflow(5), 1, null],
+        ];
 
-            if ($index === 2) {
-                $service->voidSale($sale, $userId);
-            }
+        foreach ($demoSales as $index => [$soldAt, $quantity, $remarks]) {
+            $sale = $service->createSale([
+                [
+                    'product_id' => $products[$index % $products->count()]->id,
+                    'quantity' => $quantity,
+                ],
+            ], $userId, $remarks);
+
+            $sale->created_at = $soldAt;
+            $sale->save();
         }
+
+        // Keep one voided sale so both sale states exist in the demo data.
+        $voided = $service->createSale([
+            ['product_id' => $products->first()->id, 'quantity' => 3],
+        ], $userId, 'Phone order');
+
+        $service->voidSale($voided, $userId);
+
+        $voided->created_at = now()->subDays(6);
+        $voided->save();
     }
 }

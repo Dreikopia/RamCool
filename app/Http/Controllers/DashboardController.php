@@ -15,7 +15,10 @@ class DashboardController extends Controller
             'kpis' => $this->dashboard->kpis(),
             'restockItems' => $this->dashboard->restockItems(),
             'salesTrends' => $this->dashboard->salesTrends(),
-            'salesByCategory' => $this->dashboard->salesByCategory(),
+            'salesByCategory' => [
+                'days7' => $this->dashboard->salesByCategory(7),
+                'days30' => $this->dashboard->salesByCategory(30),
+            ],
             'movements' => $this->dashboard->movements(),
         ]);
     }
