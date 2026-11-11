@@ -60,5 +60,6 @@ RUN php artisan storage:link
 # Render communicates with Apache on port 80
 EXPOSE 80
 
-# Run migrations before starting Apache
-CMD ["sh", "-c", "php artisan migrate --force && exec apache2-foreground"]
+# Run migrations, seed the accounts from SEED_* env vars (creates missing users
+# only, never resets passwords), then start Apache
+CMD ["sh", "-c", "php artisan migrate --force && php artisan db:seed --class=UserSeeder --force && exec apache2-foreground"]

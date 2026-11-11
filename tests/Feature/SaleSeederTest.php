@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Role;
 use App\Enums\SaleStatus;
 use App\Models\Category;
 use App\Models\Inventory;
@@ -9,7 +10,7 @@ use App\Models\User;
 use Database\Seeders\SaleSeeder;
 
 it('seeds sales across the dashboard chart ranges', function () {
-    User::factory()->create(['email' => 'admin@test']);
+    User::factory()->create(['email' => 'admin@test', 'role' => Role::ADMIN]);
 
     foreach (Category::factory()->count(8)->create() as $category) {
         $product = Product::factory()->create(['category_id' => $category->id]);

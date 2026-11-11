@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\Role;
 use App\Models\Inventory;
 use App\Models\Product;
 use App\Models\User;
@@ -31,7 +32,7 @@ class InventorySeeder extends Seeder
 
         $service = app(InventoryService::class);
 
-        $userId = User::query()->where('email', 'admin@test')->value('id');
+        $userId = User::query()->where('role', Role::ADMIN)->value('id');
 
         $products->each(function (Product $product, int $index) use ($service, $userId): void {
             $inventory = Inventory::query()->firstOrCreate(
