@@ -16,7 +16,7 @@ class UserSeeder extends Seeder
     {
         User::query()->updateOrCreate(['email' => 'admin@test'],
             [
-                'name' => 'Admin User',
+                'name' => 'Abrahim',
                 'role' => Role::ADMIN,
                 'status' => UserStatus::ACTIVE,
                 'password' => 'password',
@@ -25,7 +25,7 @@ class UserSeeder extends Seeder
 
         User::query()->updateOrCreate(['email' => 'staff@test'],
             [
-                'name' => 'Staff User',
+                'name' => 'Staff',
                 'role' => Role::STAFF,
                 'status' => UserStatus::ACTIVE,
                 'password' => 'password',

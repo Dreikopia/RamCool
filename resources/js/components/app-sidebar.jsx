@@ -82,7 +82,7 @@ const AppSidebar = ({ ...props }) => {
 
                             <div className="flex flex-col gap-0.5 group-data-[collapsible=icon]:hidden">
                                 <span className="text-base font-bold tracking-wide">
-                                    Aircare
+                                    RAMCOOL
                                 </span>
                                 <span className="text-xs text-muted-foreground">
                                     Inventory & Sales Management
