@@ -1,39 +1,64 @@
-# ---------- Stage 1: build the React/Vite frontend ----------
+# ---------- Stage 1: Build the React/Vite frontend ----------
 FROM node:20 AS frontend
+
 WORKDIR /app
+
 COPY package*.json ./
-RUN npm install
+
+# Install exact dependencies from package-lock.json
+RUN npm ci
+
 COPY . .
+
+# Build frontend assets
 RUN npm run build
 
-# ---------- Stage 2: the PHP + Apache server ----------
-# 8.4 is the floor: composer.lock pins symfony 8.1, which requires >= 8.4.1
+
+# ---------- Stage 2: PHP + Apache server ----------
 FROM php:8.4-apache
 
-# Install PHP extensions Laravel needs (pgsql = PostgreSQL)
-RUN apt-get update && apt-get install -y libpq-dev libzip-dev unzip git \
+# Install PHP extensions Laravel needs (PostgreSQL)
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    libzip-dev \
+    unzip \
+    git \
     && docker-php-ext-install pdo pdo_pgsql zip \
     && a2enmod rewrite \
-    && sed -ri '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf
+    && sed -ri '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf \
+    && rm -rf /var/lib/apt/lists/*
 
-# Make Apache serve Laravel's /public folder
+# Make Apache serve Laravel's public folder
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 
-# Install Composer (PHP's package manager)
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
+    /etc/apache2/sites-available/*.conf
+
+# Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
+
+# Copy Laravel application
 COPY . .
+
+# Copy built React/Vite assets
 COPY --from=frontend /app/public/build ./public/build
 
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# Install production PHP dependencies
+RUN composer install \
+    --no-dev \
+    --optimize-autoloader \
+    --no-interaction
+
+# Set Laravel permissions
 RUN chown -R www-data:www-data storage bootstrap/cache
 
-# Serves uploaded product images from storage/app/public at /storage/*
+# Create storage symbolic link
 RUN php artisan storage:link
 
-# Run migrations, then start Apache.
-# Seeding is a one-off: run `php artisan db:seed --class=UserSeeder --force`
-# once in the Render Shell, never on boot (it resets the admin password).
-CMD php artisan migrate --force && apache2-foreground
+# Render communicates with Apache on port 80
+EXPOSE 80
+
+# Run migrations before starting Apache
+CMD ["sh", "-c", "php artisan migrate --force && exec apache2-foreground"]
